@@ -1,6 +1,7 @@
 import json
 from random import choices
 import os
+from playsound import playsound
 
 
 class Interface:
@@ -36,6 +37,10 @@ class Interface:
         Ask user if they want ot resume using weights from previous session
         """
         raise NotImplementedError
+
+    def play_phrase(self, filepath: str):
+        raise NotImplementedError
+
 
 
 class CommandLine(Interface):
@@ -73,7 +78,21 @@ class CommandLine(Interface):
             else:
                 print("please enter a valid input")
 
+    def play_sound(self, filepath: str):
+        playsound(filepath)
 
+
+class Config:
+    """
+    Holds configurations
+    """
+    def __init__(self, filepath: str):
+        if os.path.exists(filepath):
+            with open(filepath, "r") as f:
+                self.params = json.load(f)
+        else:
+            print(f"config file not found at {filepath}")
+            raise Exception
 
 
 class Game:
@@ -81,11 +100,13 @@ class Game:
     Runs the app
     """
 
-    def __init__(self, reward: int, interface: Interface, syntax: list):
-        self.reward = reward
+    def __init__(self, reward: int, interface: Interface, syntax: list, config: Config):
+        self.config = config
+        self.reward = self.config.params["reward"]
         self.interface = interface
         self.syntax = syntax
         self.weights = None
+
 
     def run(self):
 
@@ -189,5 +210,6 @@ if __name__ == "__main__":
         phrases = json.load(f)
 
     clt = CommandLine()
-    myGame = Game(2, clt, phrases["syntax"])
+    config = Config("config.json")
+    myGame = Game(2, clt, phrases["syntax"], config)
     myGame.run()
