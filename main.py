@@ -1,47 +1,15 @@
 import json
-from random import choices
+import time
 import os
+from random import choices
+
+
 from playsound import playsound, PlaysoundException
-
-
-
-class Interface:
-    """
-    Parent class to be inherited by class for interaction with user
-    """
-
-    def __init__(self):
-        pass
-
-    def intro(self):
-        pass
-
-    def ask(self, message: str):
-        """ask the user a phrase"""
-        raise NotImplementedError
-
-    def correct(self):
-        """give feedback that input was correct"""
-        raise NotImplemented
-
-    def incorrect(self):
-        """give feedback that input was incorrect"""
-        raise NotImplementedError
-
-    def check_weights(self, weights: str):
-        """show user probability distribution being used to
-        control picking of next phrase to ask"""
-        raise NotImplementedError
-
-    def ask_load_weights(self) -> bool:
-        """
-        Ask user if they want ot resume using weights from previous session
-        """
-        raise NotImplementedError
-
-    def play_phrase(self, filepath: str):
-        raise NotImplementedError
-
+from interface import Interface
+from game import Game
+from config import Config
+from PyQt5.QtWidgets import (QApplication, QMainWindow,
+                             QLabel, QTextEdit, QPushButton)
 
 
 class CommandLine(Interface):
@@ -55,7 +23,7 @@ class CommandLine(Interface):
     def intro(self):
         print("Hotkeys: s: skip, p: peek, c: check probabilities")
 
-    def ask(self, message: str):
+    def ask(self, message: str) -> str:
         answer = input(message)
         return answer
 
@@ -79,40 +47,12 @@ class CommandLine(Interface):
             else:
                 print("please enter a valid input")
 
-    def play_phrase(self, filepath: str):
-        playsound(filepath)
-
-
-
-
-
-
-class Config:
-    """
-    Holds configurations
-    """
-    def __init__(self, filepath: str):
-        if os.path.exists(filepath):
-            with open(filepath, "r") as f:
-                self.params = json.load(f)
-        else:
-            print(f"config file not found at {filepath}")
-            raise Exception
-
-
-class Game:
+class cltGame(Game):
     """
     Runs the app
     """
-
-    def __init__(self, reward: int, interface: Interface, syntax: list, config: Config):
-        self.config = config
-        self.reward = self.config.params["reward"]
-        self.interface = interface
-        self.syntax = syntax
-        self.weights = None
-        self.supress_warnings=False
-
+    def __init__(self, interface: Interface, syntax: list, config: Config):
+        Game.__init__(self, interface, syntax, config)
 
     def run(self):
 
@@ -184,43 +124,112 @@ class Game:
                             pass
                     break
 
-    def preprocess(self, sentence: str):
-        """
-        preprocess a sentence
-        """
-        sentence = sentence.lower()
-        sentence = sentence.strip()
-        sentence = sentence.replace("-", " ")
-        return sentence
 
-    def uppercase_incorrect_words(self, attempt: str, truth: str):
-        """
-        returns string with incorrect words in uppercase
-        """
-        out = []
-        for a, t in zip(attempt.split(), truth.split()):
-            if a != t:
-                out.append(a.upper())
-            else:
-                out.append(a.lower())
-        out = " ".join(out)
-        return out
+class GUI(QMainWindow, Interface):
+    def __init__(self):
+        QMainWindow.__init__(self)
+        Interface.__init__(self)
 
-    def load_weights(self):
-        """
-        Loads the weights from json file
-        """
-        if os.path.exists("weights.json"):
-            with open("weights.json", "r") as f:
-                self.weights = json.load(f)["weights"]
-            return True
-        else:
-            return False
+        control_button_height = 30
+        control_button_length = 100
+        horizontal_button_spacer = 10
+        control_button_vertical_placement = 300
+        self.answered = False
+        self.answer = None
 
-    def save_weights(self):
-        """saves weights to json file"""
-        with open("weights.json", "w") as f:
-            json.dump({"weights": self.weights}, f)
+        self.setWindowTitle("My App")
+        self.phrase = QLabel(self)
+
+        self.phrase.setText("swedish phrase")
+        self.phrase.move(10, 10)
+        self.phrase.setFixedSize(500, 80)
+
+        self.input_box = QTextEdit(self)
+        self.input_box.move(10, 100)
+        self.input_box.setFixedSize(500, 50)
+
+        self.feedback = QLabel(self)
+        self.feedback.setText("feedback")
+        self.feedback.move(10, 150)
+        self.feedback.setFixedSize(500, 80)
+
+        self.submit = QPushButton(self)
+        self.submit.setText("submit")
+        self.submit.move(10, 250)
+        self.submit.setFixedSize(control_button_length, control_button_height)
+        self.submit.clicked.connect(self.on_submit)
+
+        self.p = QPushButton(self)
+        self.p.setText("peek")
+        self.p.move(10, control_button_vertical_placement)
+        self.p.setFixedSize(control_button_length, control_button_height)
+
+        self.s = QPushButton(self)
+        self.s.setText("skip")
+        self.s.move(10+control_button_length+horizontal_button_spacer, control_button_vertical_placement )
+        self.s.setFixedSize(control_button_length, control_button_height)
+
+        self.a = QPushButton(self)
+        self.a.setText("audio")
+        self.a.move((2*10)+(2*control_button_length)+horizontal_button_spacer, control_button_vertical_placement )
+        self.a.setFixedSize(control_button_length, control_button_height)
+
+        self.setMinimumSize(1000, 500)
+
+    def update_feedback(self, message: str):
+        self.feedback.setText(message)
+
+    def update_phrase(self, message: str):
+        self.phrase.setText(message)
+
+    def on_submit(self):
+        self.answer = self.input_box.toPlainText()
+        self.answered = True
+
+    def intro(self):
+        pass
+
+
+    def ask(self, message: str):
+        """ask the user a phrase"""
+        self.update_phrase(message)
+        while not self.answered:
+            time.sleep(0.05)
+        self.answered = False
+        return self.answer
+
+    def correct(self):
+        """give feedback that input was correct"""
+        self.update_feedback("well done, correct")
+
+    def incorrect(self):
+        """give feedback that input was incorrect"""
+        self.update_feedback("incorrect")
+
+    def check_weights(self, weights: str):
+        """show user probability distribution being used to
+        control picking of next phrase to ask"""
+        raise NotImplementedError
+
+    def ask_load_weights(self) -> bool:
+        """
+        Ask user if they want ot resume using weights from previous session
+        """
+        return True
+
+
+class guiGame(Game):
+
+    def __init__(self, interface: Interface, syntax: list, config: Config):
+        Game.__init__(self, interface, syntax, config)
+
+    def run(self):
+        pass
+
+
+
+
+
 
 
 if __name__ == "__main__":
@@ -228,10 +237,13 @@ if __name__ == "__main__":
         phrases = json.load(f)
 
     clt = CommandLine()
+    app = QApplication([])
+    gui = GUI()
+    gui.show()
+    app.exec()
+
     config = Config("config.json")
-    myGame = Game(2, clt, phrases["syntax"], config)
+    #myGame = cltGame(clt, phrases["syntax"], config)
 
-    #gui = GUI()
-
-    #myGame = Game(2, gui, phrases["syntaxt"])
+    myGame = guiGame(gui, phrases["syntaxt"], config)
     myGame.run()
