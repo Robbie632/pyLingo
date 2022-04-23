@@ -260,10 +260,9 @@ if __name__ == "__main__":
 
     clt = CommandLine()
     config = Config("config.json")
-    #myGame = Game(2, clt, phrases["syntax"], config)
+    myGame = Game(2, clt, phrases["syntax"], config)
 
+    #gui = GUI()
 
-    gui = GUI()
-
-    myGame = Game(2, gui, phrases["syntaxt"])
+    #myGame = Game(2, gui, phrases["syntaxt"])
     myGame.run()
