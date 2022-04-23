@@ -1,7 +1,8 @@
 import json
 from random import choices
 import os
-from playsound import playsound
+from playsound import playsound, PlaysoundException
+
 
 
 class Interface:
@@ -78,8 +79,43 @@ class CommandLine(Interface):
             else:
                 print("please enter a valid input")
 
-    def play_sound(self, filepath: str):
+    def play_phrase(self, filepath: str):
         playsound(filepath)
+
+
+class GUI(Interface):
+    def __init__(self):
+        Interface.__init__(self)
+
+    def intro(self):
+        pass
+
+    def ask(self, message: str):
+        """ask the user a phrase"""
+        raise NotImplementedError
+
+    def correct(self):
+        """give feedback that input was correct"""
+        raise NotImplemented
+
+    def incorrect(self):
+        """give feedback that input was incorrect"""
+        raise NotImplementedError
+
+    def check_weights(self, weights: str):
+        """show user probability distribution being used to
+        control picking of next phrase to ask"""
+        raise NotImplementedError
+
+    def ask_load_weights(self) -> bool:
+        """
+        Ask user if they want ot resume using weights from previous session
+        """
+        raise NotImplementedError
+
+    def play_phrase(self, filepath: str):
+        raise NotImplementedError
+
 
 
 class Config:
@@ -106,6 +142,7 @@ class Game:
         self.interface = interface
         self.syntax = syntax
         self.weights = None
+        self.supress_warnings=False
 
 
     def run(self):
@@ -148,6 +185,11 @@ class Game:
                     self.interface.check_weights(str(self.weights))
                     next_word = False
                     break
+                if answer == "i":
+                    self.supress_warnings = True
+                    print("warnings supressed")
+                    next_word=False
+                    break
                 processed_swedish = self.preprocess(language2)
                 if answer != processed_swedish and tries < 3:
                     self.weights[selected_index] += self.reward
@@ -164,6 +206,13 @@ class Game:
                 else:
                     self.weights[selected_index] = max(1, self.weights[selected_index] - self.reward)
                     self.interface.correct()
+                    try:
+                        self.interface.play_phrase(f"audio/{str(selected_index)}.mp3")
+                    except PlaysoundException as e:
+                        if not self.supress_warnings:
+                            print("no audio file found for phrase, this can be added in the audio file ,\n press 'i' to supress this warning in the future")
+                        else:
+                            pass
                     break
 
     def preprocess(self, sentence: str):
@@ -211,5 +260,10 @@ if __name__ == "__main__":
 
     clt = CommandLine()
     config = Config("config.json")
-    myGame = Game(2, clt, phrases["syntax"], config)
+    #myGame = Game(2, clt, phrases["syntax"], config)
+
+
+    gui = GUI()
+
+    myGame = Game(2, gui, phrases["syntaxt"])
     myGame.run()
