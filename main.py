@@ -211,16 +211,19 @@ class GUI(Game, QMainWindow):
         processed_swedish = self.preprocess(self.language2)
         if processed_answer == processed_swedish:
             self.correct()
+            self.decrease_weight(self.selected_index)
             self.on_audio()
             self.tries = 0
             self.new_phrase()
         elif processed_answer != processed_swedish and self.tries == 3:
             self.incorrect()
+            self.increase_weight(self.selected_index)
             time.sleep(1)
             self.update_feedback(processed_swedish)
             self.tries = 0
         elif processed_answer != processed_swedish:
             self.incorrect()
+            self.increase_weight(self.selected_index)
             self.tries += 1
 
     def intro(self):
