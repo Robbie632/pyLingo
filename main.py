@@ -137,7 +137,7 @@ class GUI(Game, QMainWindow):
         self.input_box.setFixedSize(500, 50)
 
         self.feedback = QLabel(self)
-        self.feedback.setText("feedback")
+        self.feedback.setText("")
         self.feedback.move(10, 150)
         self.feedback.setFixedSize(500, 80)
 
@@ -181,7 +181,7 @@ class GUI(Game, QMainWindow):
         self.weights[index] += self.reward
 
     def decrease_weight(self, index: int):
-        self.weights[index] = max(1, self.save_weights[index]-self.reward)
+        self.weights[index] = max(1, self.weights[index]-self.reward)
 
     def new_phrase(self):
         self.selected_index, self.language1, self.language2 = self.choose_phrase()
@@ -203,9 +203,11 @@ class GUI(Game, QMainWindow):
             pass
     def on_skip(self):
         self.new_phrase()
+        self.update_feedback("")
 
     def on_submit(self):
         answer = self.input_box.toPlainText()
+        self.input_box.setText("")
 
         processed_answer = self.preprocess(answer)
         processed_swedish = self.preprocess(self.language2)
