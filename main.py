@@ -151,16 +151,19 @@ class GUI(Game, QMainWindow):
         self.p.setText("peek")
         self.p.move(10, control_button_vertical_placement)
         self.p.setFixedSize(control_button_length, control_button_height)
+        self.p.clicked.connect(self.on_peek)
 
         self.s = QPushButton(self)
         self.s.setText("skip")
         self.s.move(10+control_button_length+horizontal_button_spacer, control_button_vertical_placement )
         self.s.setFixedSize(control_button_length, control_button_height)
+        self.s.clicked.connect(self.on_skip)
 
         self.a = QPushButton(self)
         self.a.setText("audio")
         self.a.move((2*10)+(2*control_button_length)+horizontal_button_spacer, control_button_vertical_placement )
         self.a.setFixedSize(control_button_length, control_button_height)
+        self.a.clicked.connect(self.on_audio)
 
         self.setMinimumSize(1000, 500)
 
@@ -201,18 +204,21 @@ class GUI(Game, QMainWindow):
 
     def on_submit(self):
         answer = self.input_box.toPlainText()
-        processed_answer = self.preprocess(answer)
 
-        if processed_answer == self.language2:
+        processed_answer = self.preprocess(answer)
+        processed_swedish = self.preprocess(self.language2)
+        print(f"processed_answer is {processed_answer}")
+        print(f"processed_swedish is {processed_swedish}")
+        if processed_answer == processed_swedish:
             self.correct()
             self.tries = 0
             self.new_phrase()
-        elif processed_answer != self.language2 and self.tries == 3:
+        elif processed_answer != processed_swedish and self.tries == 3:
             self.incorrect()
             time.sleep(1)
-            self.update_feedback(self.language2)
+            self.update_feedback(processed_swedish)
             self.tries = 0
-        elif processed_answer != self.language2:
+        elif processed_answer != processed_swedish:
             self.incorrect()
             self.tries += 1
 
