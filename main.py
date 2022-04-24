@@ -1,24 +1,18 @@
 import json
 import time
-import os
-from random import choices
-
-
 from playsound import playsound, PlaysoundException
-from interface import Interface
+from random import choices
 from game import Game
 from config import Config
 from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton)
 
-
-class CommandLine(Interface):
+class CLT(Game):
     """
-    class for interacting with user via command line
+    Runs the app
     """
-
-    def __init__(self):
-        Interface.__init__(self)
+    def __init__(self, syntax: list, config: Config):
+        Game.__init__(self,  syntax, config)
 
     def intro(self):
         print("Hotkeys: s: skip, p: peek, c: check probabilities")
@@ -39,42 +33,25 @@ class CommandLine(Interface):
     def ask_load_weights(self) -> bool:
 
         while True:
-            answer = input("Would you like to load weights from previous session?:\n [y]es | [n]o")
+            answer = input("Would you like to load weights from previous session?:\n [y]es | [n]o: \n")
             if answer.lower() == "y":
                 return True
             elif answer.lower() == "n":
                 return False
             else:
                 print("please enter a valid input")
+    def give_audio_warning(self):
+        print("""no audio file found for phrase, this can be added in the audio file ,
+        \n press 'i' to supress this warning in the future""")
 
-class cltGame(Game):
-    """
-    Runs the app
-    """
-    def __init__(self, interface: Interface, syntax: list, config: Config):
-        Game.__init__(self, interface, syntax, config)
-
-    def choose_phrase(self):
-        selected_syntax = choices(self.syntax, weights=self.weights)
-        selected_index = self.syntax.index(selected_syntax[0])
-        language1 = selected_syntax[0][0]
-        language2 = selected_syntax[0][1]
-
-        return selected_index, language1, language2
-
-    def increase_weight(self, index: int):
-        self.weights[index] += self.reward
-
-    def decrease_weight(self, index: int):
-        self.weights[index] -= self.reward
 
     def run(self):
 
         """
         Runs control loop
         """
-        self.interface.intro()
-        load_weights = self.interface.ask_load_weights()
+        self.intro()
+        load_weights = self.ask_load_weights()
         if load_weights:
             ret = self.load_weights()
 
@@ -90,11 +67,10 @@ class cltGame(Game):
             tries = 0
             while True:
                 self.save_weights()
-                answer = self.interface.ask(language1 + ":" + "\n")
+                answer = self.ask(language1 + ":" + "\n")
                 answer = self.preprocess(answer)
                 if answer == "s":
                     self.increase_weight(selected_index)
-
                     break
                 elif answer == "p":
                     print(language2)
@@ -102,7 +78,7 @@ class cltGame(Game):
                     self.increase_weight(selected_index)
                     break
                 if answer == "c":
-                    self.interface.check_weights(str(self.weights))
+                    self.check_weights(str(self.weights))
                     next_word = False
                     break
                 if answer == "i":
@@ -113,7 +89,7 @@ class cltGame(Game):
                 processed_swedish = self.preprocess(language2)
                 if answer != processed_swedish and tries < 3:
                     self.increase_weight(selected_index)
-                    self.interface.incorrect()
+                    self.incorrect()
                     hint = self.uppercase_incorrect_words(answer, processed_swedish)
                     print(hint)
                     tries = tries + 1
@@ -124,29 +100,30 @@ class cltGame(Game):
                     self.increase_weight(selected_index)
                     continue
                 else:
-                    self.weights[selected_index] = max(1, self.weights[selected_index] - self.reward)
-                    self.interface.correct()
+                    self.decrease_weight(selected_index)
+                    self.correct()
                     try:
-                        self.interface.play_phrase(f"audio/{str(selected_index)}.mp3")
+                        self.play_phrase(f"audio/{str(selected_index)}.mp3")
                     except PlaysoundException as e:
                         if not self.supress_warnings:
-                            print("no audio file found for phrase, this can be added in the audio file ,\n press 'i' to supress this warning in the future")
+                            self.give_audio_warning()
                         else:
                             pass
                     break
 
 
-class GUI(QMainWindow, Interface):
-    def __init__(self):
+class GUI(Game, QMainWindow):
+    def __init__(self, syntax: list, config: Config):
+        self.app = QApplication([])
+        Game.__init__(self,  syntax, config)
         QMainWindow.__init__(self)
-        Interface.__init__(self)
+
 
         control_button_height = 30
         control_button_length = 100
         horizontal_button_spacer = 10
         control_button_vertical_placement = 300
-        self.answered = False
-        self.answer = None
+        self.tries = 0
 
         self.setWindowTitle("My App")
         self.phrase = QLabel(self)
@@ -187,27 +164,60 @@ class GUI(QMainWindow, Interface):
 
         self.setMinimumSize(1000, 500)
 
+        self.new_phrase()
+
+    def choose_phrase(self):
+        selected_syntax = choices(self.syntax, weights=self.weights)
+        selected_index = self.syntax.index(selected_syntax[0])
+        language1 = selected_syntax[0][0]
+        language2 = selected_syntax[0][1]
+
+        return selected_index, language1, language2
+
+    def increase_weight(self, index: int):
+        self.weights[index] += self.reward
+
+    def decrease_weight(self, index: int):
+        self.weights[index] = max(1, self.save_weights[index]-self.reward)
+
+    def new_phrase(self):
+        self.selected_index, self.language1, self.language2 = self.choose_phrase()
+        self.update_phrase(self.language1)
+
     def update_feedback(self, message: str):
         self.feedback.setText(message)
 
     def update_phrase(self, message: str):
         self.phrase.setText(message)
 
+    def on_peek(self):
+        self.update_feedback(self.language2)
+
+    def on_audio(self):
+        self.play_phrase(f"audio/{self.selected_index}.mp3")
+
+    def on_skip(self):
+        self.new_phrase()
+
     def on_submit(self):
-        self.answer = self.input_box.toPlainText()
-        self.answered = True
+        answer = self.input_box.toPlainText()
+        processed_answer = self.preprocess(answer)
+
+        if processed_answer == self.language2:
+            self.correct()
+            self.tries = 0
+            self.new_phrase()
+        elif processed_answer != self.language2 and self.tries == 3:
+            self.incorrect()
+            time.sleep(1)
+            self.update_feedback(self.language2)
+            self.tries = 0
+        elif processed_answer != self.language2:
+            self.incorrect()
+            self.tries += 1
 
     def intro(self):
         pass
-
-
-    def ask(self, message: str):
-        """ask the user a phrase"""
-        self.update_phrase(message)
-        while not self.answered:
-            time.sleep(0.05)
-        self.answered = False
-        return self.answer
 
     def correct(self):
         """give feedback that input was correct"""
@@ -229,33 +239,30 @@ class GUI(QMainWindow, Interface):
         return True
 
 
-class guiGame(Game):
-
-    def __init__(self, interface: Interface, syntax: list, config: Config):
-        Game.__init__(self, interface, syntax, config)
-
     def run(self):
-        pass
+        """
+        Runs control loop
+        """
 
+        load_weights = self.ask_load_weights()
+        if load_weights:
+            ret = self.load_weights()
 
+        if not load_weights or not ret:
+            self.weights = len(self.syntax) * [1]
 
-
-
-
+        self.show()
+        self.app.exec()
 
 
 if __name__ == "__main__":
     with open("phrases.json", "r") as f:
         phrases = json.load(f)
 
-    clt = CommandLine()
-    app = QApplication([])
-    gui = GUI()
-    gui.show()
-    app.exec()
-
     config = Config("config.json")
-    #myGame = cltGame(clt, phrases["syntax"], config)
 
-    myGame = guiGame(gui, phrases["syntaxt"], config)
+    #myGame = cltGame(phrases["syntax"], config)
+
+    myGame = GUI(phrases["syntax"], config)
+
     myGame.run()
