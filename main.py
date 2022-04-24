@@ -197,8 +197,10 @@ class GUI(Game, QMainWindow):
         self.update_feedback(self.language2)
 
     def on_audio(self):
-        self.play_phrase(f"audio/{self.selected_index}.mp3")
-
+        try:
+            self.play_phrase(f"audio/{self.selected_index}.mp3")
+        except PlaysoundException as e:
+            pass
     def on_skip(self):
         self.new_phrase()
 
@@ -207,10 +209,9 @@ class GUI(Game, QMainWindow):
 
         processed_answer = self.preprocess(answer)
         processed_swedish = self.preprocess(self.language2)
-        print(f"processed_answer is {processed_answer}")
-        print(f"processed_swedish is {processed_swedish}")
         if processed_answer == processed_swedish:
             self.correct()
+            self.on_audio()
             self.tries = 0
             self.new_phrase()
         elif processed_answer != processed_swedish and self.tries == 3:
