@@ -54,6 +54,20 @@ class cltGame(Game):
     def __init__(self, interface: Interface, syntax: list, config: Config):
         Game.__init__(self, interface, syntax, config)
 
+    def choose_phrase(self):
+        selected_syntax = choices(self.syntax, weights=self.weights)
+        selected_index = self.syntax.index(selected_syntax[0])
+        language1 = selected_syntax[0][0]
+        language2 = selected_syntax[0][1]
+
+        return selected_index, language1, language2
+
+    def increase_weight(self, index: int):
+        self.weights[index] += self.reward
+
+    def decrease_weight(self, index: int):
+        self.weights[index] -= self.reward
+
     def run(self):
 
         """
@@ -70,11 +84,7 @@ class cltGame(Game):
         next_word = True
         while True:
             if next_word:
-                selected_syntax = choices(self.syntax, weights=self.weights)
-                selected_index = self.syntax.index(selected_syntax[0])
-                language1 = selected_syntax[0][0]
-                language2 = selected_syntax[0][1]
-
+                selected_index, language1, language2 = self.choose_phrase()
             else:
                 next_word = True
             tries = 0
@@ -83,12 +93,13 @@ class cltGame(Game):
                 answer = self.interface.ask(language1 + ":" + "\n")
                 answer = self.preprocess(answer)
                 if answer == "s":
-                    self.weights[selected_index] += (self.reward * 2)
+                    self.increase_weight(selected_index)
+
                     break
                 elif answer == "p":
                     print(language2)
                     next_word = False
-                    self.weights[selected_index] += self.reward
+                    self.increase_weight(selected_index)
                     break
                 if answer == "c":
                     self.interface.check_weights(str(self.weights))
@@ -101,7 +112,7 @@ class cltGame(Game):
                     break
                 processed_swedish = self.preprocess(language2)
                 if answer != processed_swedish and tries < 3:
-                    self.weights[selected_index] += self.reward
+                    self.increase_weight(selected_index)
                     self.interface.incorrect()
                     hint = self.uppercase_incorrect_words(answer, processed_swedish)
                     print(hint)
@@ -110,7 +121,7 @@ class cltGame(Game):
                 elif answer != language2 and tries == 3:
                     print(f"the answer is:\n {language2} ")
                     tries = 0
-                    self.weights[selected_index] += self.reward
+                    self.increase_weight(selected_index)
                     continue
                 else:
                     self.weights[selected_index] = max(1, self.weights[selected_index] - self.reward)
@@ -225,6 +236,7 @@ class guiGame(Game):
 
     def run(self):
         pass
+
 
 
 
