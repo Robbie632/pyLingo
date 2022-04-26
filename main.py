@@ -1,123 +1,38 @@
 import json
 import time
-from playsound import playsound, PlaysoundException
+import sys
+import os
+from playsound import PlaysoundException
 from random import choices
 from game import Game
 from config import Config
+from pathlib import Path
 from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton)
 
-class CLT(Game):
-    """
-    Runs the app
-    """
-    def __init__(self, syntax: list, config: Config):
-        Game.__init__(self,  syntax, config)
+from PyQt5.QtCore import Qt
 
-    def intro(self):
-        print("Hotkeys: s: skip, p: peek, c: check probabilities")
+class InputBox(QTextEdit):
 
-    def ask(self, message: str) -> str:
-        answer = input(message)
-        return answer
+    def __init__(self, s):
+        QTextEdit.__init__(self, s)
+        #self.s must already be present as an attribute in QTextEit so
+        # when I know this I can reference this instead of self.s
+        self.s = s
 
-    def correct(self):
-        print("correct")
-
-    def incorrect(self):
-        print("not quite... try again")
-
-    def check_weights(self, weights: str):
-        print(f"weights are \n {weights}")
-
-    def ask_load_weights(self) -> bool:
-
-        while True:
-            answer = input("Would you like to load weights from previous session?:\n [y]es | [n]o: \n")
-            if answer.lower() == "y":
-                return True
-            elif answer.lower() == "n":
-                return False
-            else:
-                print("please enter a valid input")
-    def give_audio_warning(self):
-        print("""no audio file found for phrase, this can be added in the audio file ,
-        \n press 'i' to supress this warning in the future""")
-
-
-    def run(self):
-
-        """
-        Runs control loop
-        """
-        self.intro()
-        load_weights = self.ask_load_weights()
-        if load_weights:
-            ret = self.load_weights()
-
-        if not load_weights or not ret:
-            self.weights = len(self.syntax) * [1]
-
-        next_word = True
-        while True:
-            if next_word:
-                selected_index, language1, language2 = self.choose_phrase()
-            else:
-                next_word = True
-            tries = 0
-            while True:
-                self.save_weights()
-                answer = self.ask(language1 + ":" + "\n")
-                answer = self.preprocess(answer)
-                if answer == "s":
-                    self.increase_weight(selected_index)
-                    break
-                elif answer == "p":
-                    print(language2)
-                    next_word = False
-                    self.increase_weight(selected_index)
-                    break
-                if answer == "c":
-                    self.check_weights(str(self.weights))
-                    next_word = False
-                    break
-                if answer == "i":
-                    self.supress_warnings = True
-                    print("warnings supressed")
-                    next_word=False
-                    break
-                processed_swedish = self.preprocess(language2)
-                if answer != processed_swedish and tries < 3:
-                    self.increase_weight(selected_index)
-                    self.incorrect()
-                    hint = self.uppercase_incorrect_words(answer, processed_swedish)
-                    print(hint)
-                    tries = tries + 1
-                    continue
-                elif answer != language2 and tries == 3:
-                    print(f"the answer is:\n {language2} ")
-                    tries = 0
-                    self.increase_weight(selected_index)
-                    continue
-                else:
-                    self.decrease_weight(selected_index)
-                    self.correct()
-                    try:
-                        self.play_phrase(f"audio/{str(selected_index)}.mp3")
-                    except PlaysoundException as e:
-                        if not self.supress_warnings:
-                            self.give_audio_warning()
-                        else:
-                            pass
-                    break
-
+    def keyPressEvent(self, keyEvent):
+        super(InputBox, self).keyPressEvent(keyEvent)
+        if keyEvent.key() == Qt.Key_Return:
+            self.s.on_submit()
+    
 
 class GUI(Game, QMainWindow):
-    def __init__(self, syntax: list, config: Config):
+    def __init__(self, syntax: list, config: Config, weights_path: str, audio_folder_path):
+        self.processed_swedish = None
+        self.processed_answer = None
         self.app = QApplication([])
-        Game.__init__(self,  syntax, config)
+        Game.__init__(self,  syntax, config, weights_path, audio_folder_path)
         QMainWindow.__init__(self)
-
 
         control_button_height = 30
         control_button_length = 100
@@ -132,7 +47,7 @@ class GUI(Game, QMainWindow):
         self.phrase.move(10, 10)
         self.phrase.setFixedSize(500, 80)
 
-        self.input_box = QTextEdit(self)
+        self.input_box = InputBox(self)
         self.input_box.move(10, 100)
         self.input_box.setFixedSize(500, 50)
 
@@ -164,6 +79,12 @@ class GUI(Game, QMainWindow):
         self.a.move((2*10)+(2*control_button_length)+horizontal_button_spacer, control_button_vertical_placement )
         self.a.setFixedSize(control_button_length, control_button_height)
         self.a.clicked.connect(self.on_audio)
+
+        self.r = QPushButton(self)
+        self.r.setText("reset")
+        self.r.move((3*10)+(3*control_button_length)+horizontal_button_spacer, control_button_vertical_placement )
+        self.r.setFixedSize(control_button_length, control_button_height)
+        self.r.clicked.connect(self.on_reset)
 
         self.setMinimumSize(1000, 500)
 
@@ -197,10 +118,12 @@ class GUI(Game, QMainWindow):
         self.update_feedback(self.language2)
 
     def on_audio(self):
+        audio_path = os.path.join("audio", f"{self.selected_index}.mp3")
         try:
-            self.play_phrase(f"audio/{self.selected_index}.mp3")
+            self.play_phrase(audio_path)
         except PlaysoundException as e:
-            pass
+            print(f"exception when playing audio from file {audio_path} {str(e)}")
+
     def on_skip(self):
         self.new_phrase()
         self.update_feedback("")
@@ -209,52 +132,64 @@ class GUI(Game, QMainWindow):
         answer = self.input_box.toPlainText()
         self.input_box.setText("")
 
-        processed_answer = self.preprocess(answer)
-        processed_swedish = self.preprocess(self.language2)
-        if processed_answer == processed_swedish:
+        self.processed_answer = self.preprocess(answer)
+        self.processed_swedish = self.preprocess(self.language2)
+        
+        if self.processed_answer == self.processed_swedish:
             self.correct()
             self.decrease_weight(self.selected_index)
             self.on_audio()
             self.tries = 0
             self.new_phrase()
-        elif processed_answer != processed_swedish and self.tries == 3:
+        elif self.processed_answer != self.processed_swedish and self.tries == 3:
             self.incorrect()
             self.increase_weight(self.selected_index)
             time.sleep(1)
-            self.update_feedback(processed_swedish)
+            self.update_feedback(self.processed_swedish)
             self.tries = 0
-        elif processed_answer != processed_swedish:
+        elif self.processed_answer != self.processed_swedish:
             self.incorrect()
             self.increase_weight(self.selected_index)
             self.tries += 1
+
+    def on_reset(self):
+        self.reset_weights()
+        self.update_feedback("weights were reset")
+
+    def on_enter(self, qKeyEvent):
+        # https://forum.qt.io/topic/103613/how-to-call-keypressevent-in-pyqt5-by-returnpressed/3
+        # follow the above to implement
+        print(qKeyEvent.key())
+        if qKeyEvent.key() == Qt.Key_Return:
+            print('Enter pressed')
+        else:
+            super().keyPressEvent(qKeyEvent)
 
     def intro(self):
         pass
 
     def correct(self):
-        """give feedback that input was correct"""
+
         self.update_feedback("well done, correct")
 
     def incorrect(self):
-        """give feedback that input was incorrect"""
-        self.update_feedback("incorrect")
+        if self.processed_answer is not None and self.processed_swedish is not None:
+            self.update_feedback(self.uppercase_incorrect_words(self.processed_answer, self.processed_swedish))
 
     def check_weights(self, weights: str):
-        """show user probability distribution being used to
-        control picking of next phrase to ask"""
-        raise NotImplementedError
+        pass
 
     def ask_load_weights(self) -> bool:
-        """
-        Ask user if they want ot resume using weights from previous session
-        """
+
         return True
 
+    def reset_weights(self):
+
+        for i in range(len(self.weights)):
+            self.weights[i] = 1
+        self.save_weights()
 
     def run(self):
-        """
-        Runs control loop
-        """
 
         load_weights = self.ask_load_weights()
         if load_weights:
@@ -267,14 +202,22 @@ class GUI(Game, QMainWindow):
         self.app.exec()
 
 
+
+
 if __name__ == "__main__":
-    with open("phrases.json", "r") as f:
+
+    bundle_dir = Path(getattr(sys, '_MEIPASS', Path.cwd()))
+
+    config_path = bundle_dir / 'config.json'
+    phrases_path = bundle_dir / 'phrases.json'
+    weights_path = bundle_dir / 'weights.json'
+    audio_folder_path = bundle_dir / 'audio'
+
+    with open(phrases_path, "r") as f:
         phrases = json.load(f)
 
-    config = Config("config.json")
+    config = Config(config_path)
 
-    #myGame = cltGame(phrases["syntax"], config)
-
-    myGame = GUI(phrases["syntax"], config)
+    myGame = GUI(phrases["syntax"], config, weights_path, audio_folder_path)
 
     myGame.run()

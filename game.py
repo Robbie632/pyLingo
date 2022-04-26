@@ -7,20 +7,23 @@ from playsound import playsound
 
 class Game:
     """
-    Runs the app
+    Super class to be implemented and methods not
+    implemented should be overrided
     """
 
-    def __init__(self, syntax: list, config: Config):
+    def __init__(self, syntax: list, config: Config, weights_path: str, audio_folder_path: str):
         self.config = config
         self.reward = self.config.params["reward"]
         self.syntax = syntax
         self.weights = None
+        self.weights_path = weights_path
+        self.audio_folder_path = audio_folder_path
         self.supress_warnings=False
 
     def run(self):
 
         """
-        Runs control loop
+        Runs control loop, listens for events and reacts
         """
         raise NotImplementedError
 
@@ -50,8 +53,8 @@ class Game:
         """
         Loads the weights from json file
         """
-        if os.path.exists("weights.json"):
-            with open("weights.json", "r") as f:
+        if os.path.exists(self.weights_path):
+            with open(self.weights_path, "r") as f:
                 self.weights = json.load(f)["weights"]
             return True
         else:
@@ -59,7 +62,7 @@ class Game:
 
     def save_weights(self):
         """saves weights to json file"""
-        with open("weights.json", "w") as f:
+        with open(self.weights_path, "w") as f:
             json.dump({"weights": self.weights}, f)
 
     def intro(self):
@@ -89,12 +92,22 @@ class Game:
         raise NotImplementedError
 
     def play_phrase(self, filepath: str):
+        """
+        Plays audio file
+        filepath: filepath to mp3 file
+        """
         playsound(filepath)
 
     def give_audio_warning(self):
+        """
+        Give warning if audio file not found
+        """
         raise NotImplementedError
 
-    def choose_phrase(self):
+    def choose_phrase(self) -> (int, str, str):
+        """
+        Chooses phrase to test with
+        """
         selected_syntax = choices(self.syntax, weights=self.weights)
         selected_index = self.syntax.index(selected_syntax[0])
         language1 = selected_syntax[0][0]
@@ -103,8 +116,20 @@ class Game:
         return selected_index, language1, language2
 
     def increase_weight(self, index: int):
+        """
+        increase value of weights at index i
+        """
         self.weights[index] += self.reward
 
     def decrease_weight(self, index: int):
+        """
+        increase value of weights at index i
+        """
         self.weights[index] = max(1, self.weights[index]-self.reward)
+
+    def reset_weights(self):
+        """
+        reset weights to all 1 and write new weights to file
+        """
+        raise NotImplementedError
 
