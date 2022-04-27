@@ -18,7 +18,7 @@ pip install requirements.txt
 
 then run in terminal
 ```commandline
-apt-get install pyqt5
+sudo apt-get install python3-pyqt5
 ```
 then run tool in terminal:
 ```commandline

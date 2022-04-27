@@ -133,3 +133,9 @@ class Game:
         """
         raise NotImplementedError
 
+    def polar_plot(self):
+        """
+        plot polar plot of weights
+        """
+        raise NotImplementedError
+

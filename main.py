@@ -8,7 +8,10 @@ from game import Game
 from config import Config
 from pathlib import Path
 from PyQt5.QtWidgets import (QApplication, QMainWindow,
-                             QLabel, QTextEdit, QPushButton)
+                             QLabel, QTextEdit, QPushButton,
+                             QWidget, QHBoxLayout, QVBoxLayout, QAction)
+from PyQt5.QtGui import QFont
+
 
 from PyQt5.QtCore import Qt
 
@@ -24,71 +27,99 @@ class InputBox(QTextEdit):
         super(InputBox, self).keyPressEvent(keyEvent)
         if keyEvent.key() == Qt.Key_Return:
             self.s.on_submit()
-    
+
+
 
 class GUI(Game, QMainWindow):
     def __init__(self, syntax: list, config: Config, weights_path: str, audio_folder_path):
-        self.processed_swedish = None
-        self.processed_answer = None
         self.app = QApplication([])
         Game.__init__(self,  syntax, config, weights_path, audio_folder_path)
         QMainWindow.__init__(self)
 
+        w = QWidget()
+        layout = QVBoxLayout()
+        layout2 = QHBoxLayout()
+
+        self.processed_swedish = None
+        self.processed_answer = None
+
         control_button_height = 30
         control_button_length = 100
-        horizontal_button_spacer = 10
-        control_button_vertical_placement = 300
         self.tries = 0
 
-        self.setWindowTitle("My App")
+        self.setWindowTitle("pyLingo")
         self.phrase = QLabel(self)
 
-        self.phrase.setText("swedish phrase")
-        self.phrase.move(10, 10)
+        self.phrase.setText("")
         self.phrase.setFixedSize(500, 80)
+        layout.addWidget(self.phrase)
 
+        input_font = QFont()
+        input_font.setPointSize(14)
         self.input_box = InputBox(self)
-        self.input_box.move(10, 100)
+        self.input_box.setFont(input_font)
         self.input_box.setFixedSize(500, 50)
+        layout.addWidget(self.input_box)
 
         self.feedback = QLabel(self)
         self.feedback.setText("")
-        self.feedback.move(10, 150)
-        self.feedback.setFixedSize(500, 80)
+        layout.addWidget(self.feedback)
+
 
         self.submit = QPushButton(self)
         self.submit.setText("submit")
-        self.submit.move(10, 250)
         self.submit.setFixedSize(control_button_length, control_button_height)
         self.submit.clicked.connect(self.on_submit)
+        layout2.addWidget(self.submit)
 
         self.p = QPushButton(self)
         self.p.setText("peek")
-        self.p.move(10, control_button_vertical_placement)
         self.p.setFixedSize(control_button_length, control_button_height)
         self.p.clicked.connect(self.on_peek)
+        layout2.addWidget(self.p)
 
-        self.s = QPushButton(self)
+        self.s = QPushButton()
         self.s.setText("skip")
-        self.s.move(10+control_button_length+horizontal_button_spacer, control_button_vertical_placement )
         self.s.setFixedSize(control_button_length, control_button_height)
         self.s.clicked.connect(self.on_skip)
+        layout2.addWidget(self.s)
 
         self.a = QPushButton(self)
         self.a.setText("audio")
-        self.a.move((2*10)+(2*control_button_length)+horizontal_button_spacer, control_button_vertical_placement )
         self.a.setFixedSize(control_button_length, control_button_height)
         self.a.clicked.connect(self.on_audio)
+        layout2.addWidget(self.a)
 
         self.r = QPushButton(self)
         self.r.setText("reset")
-        self.r.move((3*10)+(3*control_button_length)+horizontal_button_spacer, control_button_vertical_placement )
+
         self.r.setFixedSize(control_button_length, control_button_height)
         self.r.clicked.connect(self.on_reset)
+        layout2.addWidget(self.r)
+        layout.addLayout(layout2)
+        w.setLayout(layout)
+        self.setCentralWidget(w)
+
+        self.button_action1 = QAction("conversational", self)
+        self.button_action2 = QAction("tutoring", self)
+
+        self.button_action1.triggered.connect(self.on_trigger_1)
+        self.button_action2.triggered.connect(self.on_trigger_2)
+
+        menu = self.menuBar()
+        test1 = menu.addMenu("phrase-categories")
+        test1.addAction(self.button_action1)
+        test1.addSeparator()
+        test1.addAction(self.button_action2)
 
         self.setMinimumSize(1000, 500)
-
         self.new_phrase()
+
+    def on_trigger_1(self):
+        print(self.button_action1.text())
+
+    def on_trigger_2(self):
+        print(self.button_action2.text())
 
     def choose_phrase(self):
         selected_syntax = choices(self.syntax, weights=self.weights)
@@ -123,6 +154,7 @@ class GUI(Game, QMainWindow):
             self.play_phrase(audio_path)
         except PlaysoundException as e:
             print(f"exception when playing audio from file {audio_path} {str(e)}")
+        print("doen audio")
 
     def on_skip(self):
         self.new_phrase()
@@ -189,6 +221,11 @@ class GUI(Game, QMainWindow):
             self.weights[i] = 1
         self.save_weights()
 
+
+
+
+
+
     def run(self):
 
         load_weights = self.ask_load_weights()
@@ -202,16 +239,18 @@ class GUI(Game, QMainWindow):
         self.app.exec()
 
 
-
-
 if __name__ == "__main__":
 
-    bundle_dir = Path(getattr(sys, '_MEIPASS', Path.cwd()))
+    # bundle_dir = Path(getattr(sys, '_MEIPASS', Path.cwd()))
 
-    config_path = bundle_dir / 'config.json'
-    phrases_path = bundle_dir / 'phrases.json'
-    weights_path = bundle_dir / 'weights.json'
-    audio_folder_path = bundle_dir / 'audio'
+    # config_path = bundle_dir / 'config.json'
+    # phrases_path = bundle_dir / 'phrases.json'
+    # weights_path = bundle_dir / 'weights.json'
+    # audio_folder_path = bundle_dir / 'audio'
+    config_path = 'config.json'
+    phrases_path = 'phrases.json'
+    weights_path = 'weights.json'
+    audio_folder_path = 'audio'
 
     with open(phrases_path, "r") as f:
         phrases = json.load(f)

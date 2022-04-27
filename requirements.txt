@@ -1,1 +1,4 @@
 playsound
+pyqtgraph
+numpy
+matplotlib
