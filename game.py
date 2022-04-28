@@ -35,16 +35,26 @@ class Game:
         sentence = sentence.replace("-", " ")
         return sentence
 
+    def replace_accents(self, sentence):
+        """
+        replace letters in sentence containing non-primary
+        language accents with primary language equivalents
+        """
+        accents_lookup = self.config.params["accents-lookup"]
+        for k, v in accents_lookup.items():
+            sentence = sentence.replace(k, v)
+        return sentence
+
     def uppercase_incorrect_words(self, attempt: str, truth: str):
         """
         returns string with incorrect words in uppercase
         """
         out = []
         for a, t in zip(attempt.split(), truth.split()):
-            if a != t:
+            if a != self.replace_accents(t):
                 out.append(a.upper())
             else:
-                out.append(a.lower())
+                out.append(t.lower())
         out = " ".join(out)
         return out
 

@@ -1,22 +1,20 @@
 # pyLingo
 
+pyLingo is a python-based graphical user interface to 
+help a user learn phrases in a new language. The phrases to be practised 
+can be defined by the user. 
 ---
 
-* fill in the phrases.json with the phrases you want to learn
-* add the audio files to the audio folder, make sure the 
-* file name is the number order the phrase appears in the 
-* phrases.json file (counting from 0)
-
-## Run using python 
+### Running the app
 
 ---
 
-run in terminal: 
+run following in terminal to install python dependencies: 
 ```commandline
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
-then run in terminal
+then run following in terminal to install pyqt5
 ```commandline
 sudo apt-get install python3-pyqt5
 ```
@@ -25,18 +23,7 @@ then run tool in terminal:
 python main.py
 ```
 
----
 
-## To package into a windows .exe file
 
-run
-```commandline
-apt-get install wine
-```
-then run
-```commandline
-bash package_into_win_exe.sh
-```
 
-the executable is dist/main.exe
 

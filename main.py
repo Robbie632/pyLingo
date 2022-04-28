@@ -40,9 +40,10 @@ class GUI(Game, QMainWindow):
 
         w = QWidget()
         layout = QVBoxLayout()
+        layout_header = QHBoxLayout()
         layout2 = QHBoxLayout()
 
-        self.processed_swedish = None
+        self.processed_swedish_with_accents = None
         self.processed_answer = None
         self.phrases_category = phrases_category
         self.load_phrases()
@@ -57,7 +58,13 @@ class GUI(Game, QMainWindow):
 
         self.phrase.setText("")
         self.phrase.setFixedSize(500, 80)
-        layout.addWidget(self.phrase)
+        
+        self.phrase_category_label = QLabel(self)
+        self.phrase_category_label.setText(self.phrases_category)
+        layout_header.addWidget(self.phrase)
+        layout_header.addWidget(self.phrase_category_label)
+
+        layout.addLayout(layout_header)
 
         input_font = QFont()
         input_font.setPointSize(14)
@@ -112,10 +119,10 @@ class GUI(Game, QMainWindow):
         self.phrases_2_selection.triggered.connect(self.on_phrase_2)
 
         menu = self.menuBar()
-        test1 = menu.addMenu("phrase-categories")
-        test1.addAction(self.phrases_1_selection)
-        test1.addSeparator()
-        test1.addAction(self.phrases_2_selection)
+        categories_menu = menu.addMenu("phrase-categories")
+        categories_menu.addAction(self.phrases_1_selection)
+        categories_menu.addSeparator()
+        categories_menu.addAction(self.phrases_2_selection)
 
         self.setMinimumSize(1000, 500)
         self.new_phrase()
@@ -124,11 +131,15 @@ class GUI(Game, QMainWindow):
         self.phrases_category = self.phrases_1_selection.text()
         self.load_phrases()
         self.load_weights()
+        self.new_phrase()
+        self.phrase_category_label.setText(self.phrases_category)
 
     def on_phrase_2(self):
         self.phrases_category = self.phrases_2_selection.text()
         self.load_phrases()
         self.load_weights()
+        self.new_phrase()
+        self.phrase_category_label.setText(self.phrases_category)
 
     def choose_phrase(self):
         selected_syntax = choices(self.syntax, weights=self.weights)
@@ -145,6 +156,7 @@ class GUI(Game, QMainWindow):
         self.weights[index] = max(1, self.weights[index]-self.reward)
 
     def new_phrase(self):
+        self.save_weights()
         self.selected_index, self.language1, self.language2 = self.choose_phrase()
         self.update_phrase(self.language1)
 
@@ -155,6 +167,7 @@ class GUI(Game, QMainWindow):
         self.phrase.setText(message)
 
     def on_peek(self):
+        self.increase_weight(self.selected_index)
         self.update_feedback(self.language2)
 
     def on_audio(self):
@@ -163,9 +176,9 @@ class GUI(Game, QMainWindow):
             self.play_phrase(audio_path)
         except PlaysoundException as e:
             print(f"exception when playing audio from file {audio_path} {str(e)}")
-        print("doen audio")
 
     def on_skip(self):
+        self.increase_weight(self.selected_index)
         self.new_phrase()
         self.update_feedback("")
 
@@ -174,21 +187,24 @@ class GUI(Game, QMainWindow):
         self.input_box.setText("")
 
         self.processed_answer = self.preprocess(answer)
-        self.processed_swedish = self.preprocess(self.language2)
-        
-        if self.processed_answer == self.processed_swedish:
+
+        self.processed_swedish_with_accents = self.preprocess(self.language2)
+
+        self.processed_swedish_no_accents = self.replace_accents(self.processed_swedish_with_accents)
+
+        if self.processed_answer == self.processed_swedish_no_accents:
             self.correct()
             self.decrease_weight(self.selected_index)
             self.on_audio()
             self.tries = 0
             self.new_phrase()
-        elif self.processed_answer != self.processed_swedish and self.tries == 3:
+        elif self.processed_answer != self.processed_swedish_no_accents and self.tries == 3:
             self.incorrect()
             self.increase_weight(self.selected_index)
             time.sleep(1)
-            self.update_feedback(self.processed_swedish)
+            self.update_feedback(self.processed_swedish_with_accents)
             self.tries = 0
-        elif self.processed_answer != self.processed_swedish:
+        elif self.processed_answer != self.processed_swedish_no_accents:
             self.incorrect()
             self.increase_weight(self.selected_index)
             self.tries += 1
@@ -210,12 +226,14 @@ class GUI(Game, QMainWindow):
         pass
 
     def correct(self):
-
         self.update_feedback("well done, correct")
+        self.decrease_weight(self.selected_index)
 
     def incorrect(self):
-        if self.processed_answer is not None and self.processed_swedish is not None:
-            self.update_feedback(self.uppercase_incorrect_words(self.processed_answer, self.processed_swedish))
+        if self.processed_answer is not None and self.processed_swedish_with_accents is not None:
+            self.update_feedback(self.uppercase_incorrect_words(self.processed_answer,
+                                                                self.processed_swedish_with_accents))
+            self.increase_weight(self.selected_index)
 
     def check_weights(self, weights: str):
         pass
