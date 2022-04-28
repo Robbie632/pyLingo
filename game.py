@@ -11,14 +11,13 @@ class Game:
     implemented should be overrided
     """
 
-    def __init__(self, syntax: list, config: Config, weights_path: str, audio_folder_path: str):
+    def __init__(self, phrases_category: str, config: Config):
         self.config = config
         self.reward = self.config.params["reward"]
-        self.syntax = syntax
         self.weights = None
-        self.weights_path = weights_path
-        self.audio_folder_path = audio_folder_path
         self.supress_warnings=False
+        self.syntax = None
+        self.phrases_category = phrases_category
 
     def run(self):
 
@@ -53,8 +52,9 @@ class Game:
         """
         Loads the weights from json file
         """
-        if os.path.exists(self.weights_path):
-            with open(self.weights_path, "r") as f:
+        path = os.path.join("weights", self.phrases_category, "weights.json")
+        if os.path.exists(path):
+            with open(path, "r") as f:
                 self.weights = json.load(f)["weights"]
             return True
         else:
@@ -62,7 +62,8 @@ class Game:
 
     def save_weights(self):
         """saves weights to json file"""
-        with open(self.weights_path, "w") as f:
+        path = os.path.join("weights", self.phrases_category, "weights.json")
+        with open(path, "w") as f:
             json.dump({"weights": self.weights}, f)
 
     def intro(self):
@@ -103,6 +104,12 @@ class Game:
         Give warning if audio file not found
         """
         raise NotImplementedError
+
+    def load_phrases(self):
+        path = os.path.join("phrases", self.phrases_category, "phrases.json")
+
+        with open(path, "r") as f:
+            self.syntax = json.load(f)["syntax"]
 
     def choose_phrase(self) -> (int, str, str):
         """

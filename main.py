@@ -31,10 +31,12 @@ class InputBox(QTextEdit):
 
 
 class GUI(Game, QMainWindow):
-    def __init__(self, syntax: list, config: Config, weights_path: str, audio_folder_path):
+    def __init__(self, phrases_category: str, config: Config):
         self.app = QApplication([])
-        Game.__init__(self,  syntax, config, weights_path, audio_folder_path)
+        Game.__init__(self,  phrases_category, config)
         QMainWindow.__init__(self)
+
+        self.load_phrases()
 
         w = QWidget()
         layout = QVBoxLayout()
@@ -42,6 +44,9 @@ class GUI(Game, QMainWindow):
 
         self.processed_swedish = None
         self.processed_answer = None
+        self.phrases_category = phrases_category
+        self.load_phrases()
+        self.load_weights()
 
         control_button_height = 30
         control_button_length = 100
@@ -100,26 +105,30 @@ class GUI(Game, QMainWindow):
         w.setLayout(layout)
         self.setCentralWidget(w)
 
-        self.button_action1 = QAction("conversational", self)
-        self.button_action2 = QAction("tutoring", self)
+        self.phrases_1_selection = QAction("conversational", self)
+        self.phrases_2_selection = QAction("tutoring", self)
 
-        self.button_action1.triggered.connect(self.on_trigger_1)
-        self.button_action2.triggered.connect(self.on_trigger_2)
+        self.phrases_1_selection.triggered.connect(self.on_phrase_1)
+        self.phrases_2_selection.triggered.connect(self.on_phrase_2)
 
         menu = self.menuBar()
         test1 = menu.addMenu("phrase-categories")
-        test1.addAction(self.button_action1)
+        test1.addAction(self.phrases_1_selection)
         test1.addSeparator()
-        test1.addAction(self.button_action2)
+        test1.addAction(self.phrases_2_selection)
 
         self.setMinimumSize(1000, 500)
         self.new_phrase()
 
-    def on_trigger_1(self):
-        print(self.button_action1.text())
+    def on_phrase_1(self):
+        self.phrases_category = self.phrases_1_selection.text()
+        self.load_phrases()
+        self.load_weights()
 
-    def on_trigger_2(self):
-        print(self.button_action2.text())
+    def on_phrase_2(self):
+        self.phrases_category = self.phrases_2_selection.text()
+        self.load_phrases()
+        self.load_weights()
 
     def choose_phrase(self):
         selected_syntax = choices(self.syntax, weights=self.weights)
@@ -149,7 +158,7 @@ class GUI(Game, QMainWindow):
         self.update_feedback(self.language2)
 
     def on_audio(self):
-        audio_path = os.path.join("audio", f"{self.selected_index}.mp3")
+        audio_path = os.path.join("audio", self.phrases_category, f"{self.selected_index}.mp3")
         try:
             self.play_phrase(audio_path)
         except PlaysoundException as e:
@@ -221,11 +230,6 @@ class GUI(Game, QMainWindow):
             self.weights[i] = 1
         self.save_weights()
 
-
-
-
-
-
     def run(self):
 
         load_weights = self.ask_load_weights()
@@ -241,22 +245,10 @@ class GUI(Game, QMainWindow):
 
 if __name__ == "__main__":
 
-    # bundle_dir = Path(getattr(sys, '_MEIPASS', Path.cwd()))
-
-    # config_path = bundle_dir / 'config.json'
-    # phrases_path = bundle_dir / 'phrases.json'
-    # weights_path = bundle_dir / 'weights.json'
-    # audio_folder_path = bundle_dir / 'audio'
     config_path = 'config.json'
-    phrases_path = 'phrases.json'
-    weights_path = 'weights.json'
-    audio_folder_path = 'audio'
-
-    with open(phrases_path, "r") as f:
-        phrases = json.load(f)
-
+    phrases_category = "conversational"
     config = Config(config_path)
 
-    myGame = GUI(phrases["syntax"], config, weights_path, audio_folder_path)
+    myGame = GUI(phrases_category, config)
 
     myGame.run()
