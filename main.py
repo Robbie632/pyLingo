@@ -9,7 +9,14 @@ from config import Config
 from pathlib import Path
 from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
-                             QWidget, QHBoxLayout, QVBoxLayout, QAction)
+                             QWidget, QHBoxLayout, QVBoxLayout,
+                             QAction, QStatusBar)
+import matplotlib
+matplotlib.use('Qt5Agg')
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+
 from PyQt5.QtGui import QFont
 
 
@@ -28,7 +35,12 @@ class InputBox(QTextEdit):
         if keyEvent.key() == Qt.Key_Return:
             self.s.on_submit()
 
+class MplCanvas(FigureCanvasQTAgg):
 
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)
 
 class GUI(Game, QMainWindow):
     def __init__(self, phrases_category: str, config: Config):
@@ -39,15 +51,22 @@ class GUI(Game, QMainWindow):
         self.load_phrases()
 
         w = QWidget()
-        layout = QVBoxLayout()
-        layout_header = QHBoxLayout()
-        layout2 = QHBoxLayout()
+        vertical_layout = QVBoxLayout()
+        layout_graph = QHBoxLayout()
+        horizontal_layout = QHBoxLayout()
 
         self.processed_swedish_with_accents = None
         self.processed_answer = None
         self.phrases_category = phrases_category
         self.load_phrases()
         self.load_weights()
+
+        self.phrase_category_label = QLabel(self)
+        self.phrase_category_label.setText(self.phrases_category)
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
+        self.statusBar.addPermanentWidget(self.phrase_category_label)
+        self.phrase_category_label.setText(self.phrases_category)
 
         control_button_height = 30
         control_button_length = 100
@@ -58,58 +77,57 @@ class GUI(Game, QMainWindow):
 
         self.phrase.setText("")
         self.phrase.setFixedSize(500, 80)
-        
-        self.phrase_category_label = QLabel(self)
-        self.phrase_category_label.setText(self.phrases_category)
-        layout_header.addWidget(self.phrase)
-        layout_header.addWidget(self.phrase_category_label)
+        layout_graph.addWidget(self.phrase)
 
-        layout.addLayout(layout_header)
+        self.graph = MplCanvas(self, width=5, height=4, dpi=100)
+        layout_graph.addWidget(self.graph)
+        vertical_layout.addLayout(layout_graph)
+
+        self.update_plot()
 
         input_font = QFont()
         input_font.setPointSize(14)
         self.input_box = InputBox(self)
         self.input_box.setFont(input_font)
         self.input_box.setFixedSize(500, 50)
-        layout.addWidget(self.input_box)
+        vertical_layout.addWidget(self.input_box)
 
         self.feedback = QLabel(self)
         self.feedback.setText("")
-        layout.addWidget(self.feedback)
-
+        vertical_layout.addWidget(self.feedback)
 
         self.submit = QPushButton(self)
         self.submit.setText("submit")
         self.submit.setFixedSize(control_button_length, control_button_height)
         self.submit.clicked.connect(self.on_submit)
-        layout2.addWidget(self.submit)
+        horizontal_layout.addWidget(self.submit)
 
         self.p = QPushButton(self)
         self.p.setText("peek")
         self.p.setFixedSize(control_button_length, control_button_height)
         self.p.clicked.connect(self.on_peek)
-        layout2.addWidget(self.p)
+        horizontal_layout.addWidget(self.p)
 
         self.s = QPushButton()
         self.s.setText("skip")
         self.s.setFixedSize(control_button_length, control_button_height)
         self.s.clicked.connect(self.on_skip)
-        layout2.addWidget(self.s)
+        horizontal_layout.addWidget(self.s)
 
         self.a = QPushButton(self)
         self.a.setText("audio")
         self.a.setFixedSize(control_button_length, control_button_height)
         self.a.clicked.connect(self.on_audio)
-        layout2.addWidget(self.a)
+        horizontal_layout.addWidget(self.a)
 
         self.r = QPushButton(self)
         self.r.setText("reset")
 
         self.r.setFixedSize(control_button_length, control_button_height)
         self.r.clicked.connect(self.on_reset)
-        layout2.addWidget(self.r)
-        layout.addLayout(layout2)
-        w.setLayout(layout)
+        horizontal_layout.addWidget(self.r)
+        vertical_layout.addLayout(horizontal_layout)
+        w.setLayout(vertical_layout)
         self.setCentralWidget(w)
 
         self.phrases_1_selection = QAction("conversational", self)
@@ -131,6 +149,7 @@ class GUI(Game, QMainWindow):
         self.phrases_category = self.phrases_1_selection.text()
         self.load_phrases()
         self.load_weights()
+        self.update_plot()
         self.new_phrase()
         self.phrase_category_label.setText(self.phrases_category)
 
@@ -138,6 +157,7 @@ class GUI(Game, QMainWindow):
         self.phrases_category = self.phrases_2_selection.text()
         self.load_phrases()
         self.load_weights()
+        self.update_plot()
         self.new_phrase()
         self.phrase_category_label.setText(self.phrases_category)
 
@@ -150,9 +170,11 @@ class GUI(Game, QMainWindow):
         return selected_index, language1, language2
 
     def increase_weight(self, index: int):
+        print("increased wieght")
         self.weights[index] += self.reward
 
     def decrease_weight(self, index: int):
+        print("decreased weights")
         self.weights[index] = max(1, self.weights[index]-self.reward)
 
     def new_phrase(self):
@@ -168,6 +190,7 @@ class GUI(Game, QMainWindow):
 
     def on_peek(self):
         self.increase_weight(self.selected_index)
+        self.update_plot()
         self.update_feedback(self.language2)
 
     def on_audio(self):
@@ -179,6 +202,7 @@ class GUI(Game, QMainWindow):
 
     def on_skip(self):
         self.increase_weight(self.selected_index)
+        self.update_plot()
         self.new_phrase()
         self.update_feedback("")
 
@@ -194,23 +218,21 @@ class GUI(Game, QMainWindow):
 
         if self.processed_answer == self.processed_swedish_no_accents:
             self.correct()
-            self.decrease_weight(self.selected_index)
             self.on_audio()
             self.tries = 0
             self.new_phrase()
         elif self.processed_answer != self.processed_swedish_no_accents and self.tries == 3:
             self.incorrect()
-            self.increase_weight(self.selected_index)
             time.sleep(1)
             self.update_feedback(self.processed_swedish_with_accents)
             self.tries = 0
         elif self.processed_answer != self.processed_swedish_no_accents:
             self.incorrect()
-            self.increase_weight(self.selected_index)
             self.tries += 1
 
     def on_reset(self):
         self.reset_weights()
+        self.update_plot()
         self.update_feedback("weights were reset")
 
     def on_enter(self, qKeyEvent):
@@ -227,6 +249,7 @@ class GUI(Game, QMainWindow):
 
     def correct(self):
         self.update_feedback("well done, correct")
+        self.update_plot()
         self.decrease_weight(self.selected_index)
 
     def incorrect(self):
@@ -234,6 +257,8 @@ class GUI(Game, QMainWindow):
             self.update_feedback(self.uppercase_incorrect_words(self.processed_answer,
                                                                 self.processed_swedish_with_accents))
             self.increase_weight(self.selected_index)
+            self.update_plot()
+
 
     def check_weights(self, weights: str):
         pass
@@ -259,6 +284,13 @@ class GUI(Game, QMainWindow):
 
         self.show()
         self.app.exec()
+
+    def update_plot(self):
+        self.graph.axes.clear()
+        self.graph.axes.plot(range(len(self.weights)), self.weights)
+        self.graph.draw()
+        print("updated plot")
+
 
 
 if __name__ == "__main__":
