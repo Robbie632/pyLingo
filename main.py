@@ -291,7 +291,14 @@ class GUI(Game, QMainWindow):
         self.graph.axes.plot(range(len(self.weights)), self.weights, color ="black")
         y_positions = [1, 3, 5]
 
-        self.graph.axes.barh(y=y_positions, width=len(self.weights), height=max(self.weights), color=["g", "y", "r"])
+        self.graph.axes.barh(y=y_positions,
+                             width=len(self.weights),
+                             align="edge",
+                             height=2,
+                             color=[[0, 1, 0],
+                                    [0.98823529, 0.85, 0.01],
+                                    [1, 0, 0]])
+        self.graph.axes.axis("off")
 
         self.graph.draw()
         print("updated plot")
