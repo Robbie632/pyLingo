@@ -62,7 +62,7 @@ class Game:
         """
         Loads the weights from json file
         """
-        path = os.path.join("weights", self.phrases_category, "weights.json")
+        path = os.path.join("assets", self.phrases_category, "weights.json")
         if os.path.exists(path):
             with open(path, "r") as f:
                 self.weights = json.load(f)["weights"]
@@ -72,7 +72,7 @@ class Game:
 
     def save_weights(self):
         """saves weights to json file"""
-        path = os.path.join("weights", self.phrases_category, "weights.json")
+        path = os.path.join("assets", self.phrases_category, "weights.json")
         with open(path, "w") as f:
             json.dump({"weights": self.weights}, f)
 
@@ -116,7 +116,7 @@ class Game:
         raise NotImplementedError
 
     def load_phrases(self):
-        path = os.path.join("phrases", self.phrases_category, "phrases.json")
+        path = os.path.join("assets", self.phrases_category, "phrases.json")
 
         with open(path, "r") as f:
             self.syntax = json.load(f)["syntax"]

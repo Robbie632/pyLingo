@@ -171,11 +171,9 @@ class GUI(Game, QMainWindow):
         return selected_index, language1, language2
 
     def increase_weight(self, index: int):
-        print("increased wieght")
         self.weights[index] += self.reward
 
     def decrease_weight(self, index: int):
-        print("decreased weights")
         self.weights[index] = max(1, self.weights[index]-self.reward)
 
     def new_phrase(self):
@@ -191,11 +189,12 @@ class GUI(Game, QMainWindow):
 
     def on_peek(self):
         self.increase_weight(self.selected_index)
+        self.save_weights()
         self.update_plot()
         self.update_feedback(self.language2)
 
     def on_audio(self):
-        audio_path = os.path.join("audio", self.phrases_category, f"{self.selected_index}.mp3")
+        audio_path = os.path.join("assets", self.phrases_category, "audio", f"{self.selected_index}.mp3")
         try:
             self.play_phrase(audio_path)
         except PlaysoundException as e:
@@ -203,6 +202,7 @@ class GUI(Game, QMainWindow):
 
     def on_skip(self):
         self.increase_weight(self.selected_index)
+        self.save_weights()
         self.update_plot()
         self.new_phrase()
         self.update_feedback("")
@@ -236,28 +236,21 @@ class GUI(Game, QMainWindow):
         self.update_plot()
         self.update_feedback("weights were reset")
 
-    def on_enter(self, qKeyEvent):
-        # https://forum.qt.io/topic/103613/how-to-call-keypressevent-in-pyqt5-by-returnpressed/3
-        # follow the above to implement
-        print(qKeyEvent.key())
-        if qKeyEvent.key() == Qt.Key_Return:
-            print('Enter pressed')
-        else:
-            super().keyPressEvent(qKeyEvent)
-
     def intro(self):
         pass
 
     def correct(self):
         self.update_feedback("well done, correct")
-        self.update_plot()
         self.decrease_weight(self.selected_index)
+        self.update_plot()
+        self.save_weights()
 
     def incorrect(self):
         if self.processed_answer is not None and self.processed_swedish_with_accents is not None:
             self.update_feedback(self.uppercase_incorrect_words(self.processed_answer,
                                                                 self.processed_swedish_with_accents))
             self.increase_weight(self.selected_index)
+            self.save_weights()
             self.update_plot()
 
 
@@ -287,6 +280,10 @@ class GUI(Game, QMainWindow):
         self.app.exec()
 
     def update_plot(self):
+
+        """
+        Updates graph showing wieghts
+        """
         self.graph.axes.clear()
         self.graph.axes.plot(range(len(self.weights)), self.weights, color ="black")
         y_positions = [1, 3, 5]
@@ -299,14 +296,10 @@ class GUI(Game, QMainWindow):
                                     [0.98823529, 0.85, 0.01],
                                     [1, 0, 0]])
         self.graph.axes.axis("off")
-
         self.graph.draw()
-        print("updated plot")
-
 
 
 if __name__ == "__main__":
-
     config_path = 'config.json'
     phrases_category = "conversational"
     config = Config(config_path)
