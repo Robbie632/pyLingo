@@ -12,16 +12,12 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QWidget, QHBoxLayout, QVBoxLayout,
                              QAction, QStatusBar)
 import matplotlib
-matplotlib.use('Qt5Agg')
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-
 from PyQt5.QtGui import QFont
-
-
 from PyQt5.QtCore import Qt
+
+matplotlib.use('Qt5Agg')
 
 class InputBox(QTextEdit):
 
@@ -80,7 +76,7 @@ class GUI(Game, QMainWindow):
         self.phrase.setFixedSize(500, 80)
         layout_graph.addWidget(self.phrase)
 
-        self.graph = MplCanvas(self, width=5, height=4, dpi=100)
+        self.graph = MplCanvas(self, width=3, height=2, dpi=100)
         layout_graph.addWidget(self.graph)
         vertical_layout.addLayout(layout_graph)
 
@@ -131,31 +127,22 @@ class GUI(Game, QMainWindow):
         w.setLayout(vertical_layout)
         self.setCentralWidget(w)
 
-        self.phrases_1_selection = QAction("conversational", self)
-        self.phrases_2_selection = QAction("tutoring", self)
-
-        self.phrases_1_selection.triggered.connect(self.on_phrase_1)
-        self.phrases_2_selection.triggered.connect(self.on_phrase_2)
 
         menu = self.menuBar()
         categories_menu = menu.addMenu("phrase-categories")
-        categories_menu.addAction(self.phrases_1_selection)
-        categories_menu.addSeparator()
-        categories_menu.addAction(self.phrases_2_selection)
+
+
+        for category in self.config.params["phrase-categories"]:
+            action = QAction(category, self)
+            action.triggered.connect(self.on_caetgory_selection)
+            categories_menu.addAction(action)
+            categories_menu.addSeparator()
 
         self.setMinimumSize(1000, 500)
         self.new_phrase()
 
-    def on_phrase_1(self):
-        self.phrases_category = self.phrases_1_selection.text()
-        self.load_phrases()
-        self.load_weights()
-        self.update_plot()
-        self.new_phrase()
-        self.phrase_category_label.setText(self.phrases_category)
-
-    def on_phrase_2(self):
-        self.phrases_category = self.phrases_2_selection.text()
+    def on_caetgory_selection(self):
+        self.phrases_category = self.sender().text()
         self.load_phrases()
         self.load_weights()
         self.update_plot()

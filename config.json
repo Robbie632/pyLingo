@@ -1,6 +1,6 @@
 {
   "reward": 1,
-  "phrase-categories": ["conversational", "tutor"],
+  "phrase-categories": ["conversational", "tutoring"],
   "accents-lookup": {
     "å": "a",
     "ä": "a",
