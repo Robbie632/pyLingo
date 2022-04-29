@@ -16,6 +16,7 @@ matplotlib.use('Qt5Agg')
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 
 from PyQt5.QtGui import QFont
 
@@ -287,7 +288,11 @@ class GUI(Game, QMainWindow):
 
     def update_plot(self):
         self.graph.axes.clear()
-        self.graph.axes.plot(range(len(self.weights)), self.weights)
+        self.graph.axes.plot(range(len(self.weights)), self.weights, color ="black")
+        y_positions = [1, 3, 5]
+
+        self.graph.axes.barh(y=y_positions, width=len(self.weights), height=max(self.weights), color=["g", "y", "r"])
+
         self.graph.draw()
         print("updated plot")
 
