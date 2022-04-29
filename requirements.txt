@@ -1,4 +1,2 @@
 playsound
-pyqtgraph
-numpy
 matplotlib
