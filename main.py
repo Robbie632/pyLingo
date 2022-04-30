@@ -12,15 +12,12 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QWidget, QHBoxLayout, QVBoxLayout,
                              QAction, QStatusBar)
 import matplotlib
-matplotlib.use('Qt5Agg')
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-
 from PyQt5.QtGui import QFont
-
-
 from PyQt5.QtCore import Qt
+
+matplotlib.use('Qt5Agg')
 
 class InputBox(QTextEdit):
 
@@ -79,7 +76,7 @@ class GUI(Game, QMainWindow):
         self.phrase.setFixedSize(500, 80)
         layout_graph.addWidget(self.phrase)
 
-        self.graph = MplCanvas(self, width=5, height=4, dpi=100)
+        self.graph = MplCanvas(self, width=3, height=2, dpi=100)
         layout_graph.addWidget(self.graph)
         vertical_layout.addLayout(layout_graph)
 
@@ -130,31 +127,22 @@ class GUI(Game, QMainWindow):
         w.setLayout(vertical_layout)
         self.setCentralWidget(w)
 
-        self.phrases_1_selection = QAction("conversational", self)
-        self.phrases_2_selection = QAction("tutoring", self)
-
-        self.phrases_1_selection.triggered.connect(self.on_phrase_1)
-        self.phrases_2_selection.triggered.connect(self.on_phrase_2)
 
         menu = self.menuBar()
         categories_menu = menu.addMenu("phrase-categories")
-        categories_menu.addAction(self.phrases_1_selection)
-        categories_menu.addSeparator()
-        categories_menu.addAction(self.phrases_2_selection)
+
+
+        for category in self.config.params["phrase-categories"]:
+            action = QAction(category, self)
+            action.triggered.connect(self.on_caetgory_selection)
+            categories_menu.addAction(action)
+            categories_menu.addSeparator()
 
         self.setMinimumSize(1000, 500)
         self.new_phrase()
 
-    def on_phrase_1(self):
-        self.phrases_category = self.phrases_1_selection.text()
-        self.load_phrases()
-        self.load_weights()
-        self.update_plot()
-        self.new_phrase()
-        self.phrase_category_label.setText(self.phrases_category)
-
-    def on_phrase_2(self):
-        self.phrases_category = self.phrases_2_selection.text()
+    def on_caetgory_selection(self):
+        self.phrases_category = self.sender().text()
         self.load_phrases()
         self.load_weights()
         self.update_plot()
@@ -170,11 +158,9 @@ class GUI(Game, QMainWindow):
         return selected_index, language1, language2
 
     def increase_weight(self, index: int):
-        print("increased wieght")
         self.weights[index] += self.reward
 
     def decrease_weight(self, index: int):
-        print("decreased weights")
         self.weights[index] = max(1, self.weights[index]-self.reward)
 
     def new_phrase(self):
@@ -190,11 +176,12 @@ class GUI(Game, QMainWindow):
 
     def on_peek(self):
         self.increase_weight(self.selected_index)
+        self.save_weights()
         self.update_plot()
         self.update_feedback(self.language2)
 
     def on_audio(self):
-        audio_path = os.path.join("audio", self.phrases_category, f"{self.selected_index}.mp3")
+        audio_path = os.path.join("assets", self.phrases_category, "audio", f"{self.selected_index}.mp3")
         try:
             self.play_phrase(audio_path)
         except PlaysoundException as e:
@@ -202,6 +189,7 @@ class GUI(Game, QMainWindow):
 
     def on_skip(self):
         self.increase_weight(self.selected_index)
+        self.save_weights()
         self.update_plot()
         self.new_phrase()
         self.update_feedback("")
@@ -235,28 +223,21 @@ class GUI(Game, QMainWindow):
         self.update_plot()
         self.update_feedback("weights were reset")
 
-    def on_enter(self, qKeyEvent):
-        # https://forum.qt.io/topic/103613/how-to-call-keypressevent-in-pyqt5-by-returnpressed/3
-        # follow the above to implement
-        print(qKeyEvent.key())
-        if qKeyEvent.key() == Qt.Key_Return:
-            print('Enter pressed')
-        else:
-            super().keyPressEvent(qKeyEvent)
-
     def intro(self):
         pass
 
     def correct(self):
         self.update_feedback("well done, correct")
-        self.update_plot()
         self.decrease_weight(self.selected_index)
+        self.update_plot()
+        self.save_weights()
 
     def incorrect(self):
         if self.processed_answer is not None and self.processed_swedish_with_accents is not None:
             self.update_feedback(self.uppercase_incorrect_words(self.processed_answer,
                                                                 self.processed_swedish_with_accents))
             self.increase_weight(self.selected_index)
+            self.save_weights()
             self.update_plot()
 
 
@@ -286,15 +267,26 @@ class GUI(Game, QMainWindow):
         self.app.exec()
 
     def update_plot(self):
-        self.graph.axes.clear()
-        self.graph.axes.plot(range(len(self.weights)), self.weights)
-        self.graph.draw()
-        print("updated plot")
 
+        """
+        Updates graph showing wieghts
+        """
+        self.graph.axes.clear()
+        self.graph.axes.plot(range(len(self.weights)), self.weights, color ="black")
+        y_positions = [1, 3, 5]
+
+        self.graph.axes.barh(y=y_positions,
+                             width=len(self.weights),
+                             align="edge",
+                             height=2,
+                             color=[[0, 1, 0],
+                                    [0.98823529, 0.85, 0.01],
+                                    [1, 0, 0]])
+        self.graph.axes.axis("off")
+        self.graph.draw()
 
 
 if __name__ == "__main__":
-
     config_path = 'config.json'
     phrases_category = "conversational"
     config = Config(config_path)
