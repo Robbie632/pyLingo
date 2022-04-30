@@ -1,0 +1,20 @@
+{
+  "syntax":
+    [["I need to go to the toilet", "a"],
+    ["Where are the toilets?", "b"],
+    ["I cannot wait until we go to dinner", "c"],
+    ["I need a coffee", "d"],
+    ["I cannot find my phone", "e"],
+    ["That is a nice view", "f"],
+    ["Shall we get a coffee?", "g"],
+    ["I thought there used to be better food", "h"],
+    ["Do you like the food?", "I"],
+    ["shall we go?",  "j"],
+    ["Are you finished?","k"],
+    ["Look at that house", "l"],
+    ["Look at those plants", "m"],
+    ["That house is so nice", "n"],
+    ["This is lovely", "o"],
+    ["I am happy", "p"],
+    ["are you happy?", "q"]]
+}
