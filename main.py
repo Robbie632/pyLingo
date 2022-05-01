@@ -11,11 +11,12 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
                              QWidget, QHBoxLayout, QVBoxLayout,
                              QAction, QStatusBar)
+
 import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRunnable, QThreadPool
 
 matplotlib.use('Qt5Agg')
 
@@ -39,11 +40,33 @@ class MplCanvas(FigureCanvasQTAgg):
         self.axes = fig.add_subplot(111)
         super(MplCanvas, self).__init__(fig)
 
+
+class Worker(QRunnable):
+
+    """
+    Allows func to be run on seperate thread from the gui thread
+    """
+
+    def __init__(self, func, *args, **kwargs):
+        QRunnable.__init__(self)
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+    def run(self):
+        """
+        run function on seperate thread from parent
+        """
+        self.func(*self.args, *self.kwargs)
+
+
 class GUI(Game, QMainWindow):
     def __init__(self, phrases_category: str, config: Config):
         self.app = QApplication([])
         Game.__init__(self,  phrases_category, config)
         QMainWindow.__init__(self)
+
+        self.sound_thread = QThreadPool()
 
         self.load_phrases()
 
@@ -117,6 +140,7 @@ class GUI(Game, QMainWindow):
         self.a.clicked.connect(self.on_audio)
         horizontal_layout.addWidget(self.a)
 
+
         self.r = QPushButton(self)
         self.r.setText("reset")
 
@@ -183,7 +207,9 @@ class GUI(Game, QMainWindow):
     def on_audio(self):
         audio_path = os.path.join("assets", self.phrases_category, "audio", f"{self.selected_index}.mp3")
         try:
-            self.play_phrase(audio_path)
+            # run function on seperate thread from gui thread
+            worker = Worker(self.play_phrase, audio_path)
+            self.sound_thread.start(worker)
         except PlaysoundException as e:
             print(f"exception when playing audio from file {audio_path} {str(e)}")
 
