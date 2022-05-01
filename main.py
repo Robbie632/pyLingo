@@ -297,6 +297,7 @@ class GUI(Game, QMainWindow):
         """
         Updates graph showing wieghts
         """
+
         self.graph.axes.clear()
         self.graph.axes.plot(range(len(self.weights)), self.weights, color ="black")
         y_positions = [1, 3, 5]
