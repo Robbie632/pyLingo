@@ -2,7 +2,7 @@ import json
 import os
 from config import Config
 from random import choices
-from playsound import playsound
+from playsound import playsound, PlaysoundException
 
 
 class Game:
@@ -30,8 +30,8 @@ class Game:
         """
         preprocess a sentence
         """
+        sentence = sentence.strip().replace("\n", "").replace("\t", "")
         sentence = sentence.lower()
-        sentence = sentence.strip()
         sentence = sentence.replace("-", " ")
         return sentence
 
@@ -107,7 +107,10 @@ class Game:
         Plays audio file
         filepath: filepath to mp3 file
         """
-        playsound(filepath)
+        try:
+            playsound(filepath)
+        except PlaysoundException as e:
+            print(f"exception when playing audio from file {filepath} {str(e)}")
 
     def give_audio_warning(self):
         """
