@@ -82,11 +82,11 @@ class GUI(Game, QMainWindow):
         self.load_weights()
 
         self.phrase_category_label = QLabel(self)
-        self.phrase_category_label.setText(self.phrases_category)
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
         self.statusBar.addPermanentWidget(self.phrase_category_label)
-        self.phrase_category_label.setText(self.phrases_category)
+        self.phrase_category_label.setText(f"category: {self.phrases_category}")
+
 
         control_button_height = 30
         control_button_length = 100
@@ -158,20 +158,20 @@ class GUI(Game, QMainWindow):
 
         for category in self.config.params["phrase-categories"]:
             action = QAction(category, self)
-            action.triggered.connect(self.on_caetgory_selection)
+            action.triggered.connect(self.on_category_selection)
             categories_menu.addAction(action)
             categories_menu.addSeparator()
 
         self.setMinimumSize(1000, 500)
         self.new_phrase()
 
-    def on_caetgory_selection(self):
+    def on_category_selection(self):
         self.phrases_category = self.sender().text()
         self.load_phrases()
         self.load_weights()
         self.update_plot()
         self.new_phrase()
-        self.phrase_category_label.setText(self.phrases_category)
+        self.phrase_category_label.setText(f"category: {self.phrases_category}")
 
     def choose_phrase(self):
         selected_syntax = choices(self.syntax, weights=self.weights)
@@ -236,11 +236,6 @@ class GUI(Game, QMainWindow):
             self.on_audio()
             self.tries = 0
             self.new_phrase()
-        elif self.processed_answer != self.processed_swedish_no_accents and self.tries == 3:
-            self.incorrect()
-            time.sleep(1)
-            self.update_feedback(self.processed_swedish_with_accents)
-            self.tries = 0
         elif self.processed_answer != self.processed_swedish_no_accents:
             self.incorrect()
             self.tries += 1
