@@ -206,12 +206,11 @@ class GUI(Game, QMainWindow):
 
     def on_audio(self):
         audio_path = os.path.join("assets", self.phrases_category, "audio", f"{self.selected_index}.mp3")
-        try:
-            # run function on seperate thread from gui thread
-            worker = Worker(self.play_phrase, audio_path)
-            self.sound_thread.start(worker)
-        except PlaysoundException as e:
-            print(f"exception when playing audio from file {audio_path} {str(e)}")
+
+        # run function on seperate thread from gui thread
+        worker = Worker(self.play_phrase, audio_path)
+        self.sound_thread.start(worker)
+
 
     def on_skip(self):
         self.increase_weight(self.selected_index)
@@ -222,6 +221,8 @@ class GUI(Game, QMainWindow):
 
     def on_submit(self):
         answer = self.input_box.toPlainText()
+
+
         self.input_box.setText("")
 
         self.processed_answer = self.preprocess(answer)
