@@ -1,0 +1,27 @@
+{
+  "syntax":
+    [
+      ["one", "placeholder"],
+      ["two", "placeholder"],
+      ["three", "placeholder"],
+      ["four", "placeholder"],
+      ["five", "placeholder"],
+      ["six", "placeholder"],
+      ["seven", "placeholder"],
+      ["eight", "placeholder"],
+      ["nine", "placeholder"],
+      ["ten", "placeholder"],
+      ["eleven", "placeholder"],
+      ["twelve", "placeholder"],
+      ["half one", "placeholder"],
+      ["half three", "placeholder"],
+      ["half five", "placeholder"],
+      ["half seven", "placeholder"],
+      ["half nine", "placeholder"],
+      ["half eight", "placeholder"],
+      ["quarter past one", "placeholder"],
+      ["quarter past four", "placeholder"],
+      ["quarter to five", "placeholder"],
+      ["quarter to seven", "placeholder"]
+    ]
+}
