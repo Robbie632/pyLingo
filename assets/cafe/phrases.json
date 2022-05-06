@@ -1,10 +1,10 @@
 {"syntax":[
-["placeholder","Vill du ha något annat?"],
-["placeholder","Hej, vad vill du beställa?"],
-["placeholder", "Vill du ha något annat?"],
-["placeholder", "Ok, här är kvittot"],
-["placeholder", "Lussekat"],
-["placeholder", "Kanelbulle semla"],
-["placeholder", "Ckokladbullar"],
-["placeholder", "Kort eller kontanter"]
+  ["Do you want anything else?","Vill du ha något annat?"],
+  ["Hi, what do you want to order?","Hej, vad vill du beställa?"],
+  ["Ok, here is the receipt", "Ok, här är kvittot"],
+  ["saffron bun", "Lussekat"],
+  ["cinnamon bun", "Kanelbulle"],
+  ["semla", "semla"],
+  ["chocolate balls", "Ckokladbullar"],
+  ["card or cash?", "Kort eller kontanter?"]
 ]}
