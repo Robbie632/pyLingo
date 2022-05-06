@@ -1,30 +1,28 @@
-import json
-import time
-import sys
 import os
-from playsound import PlaysoundException
 from random import choices
-from game import Game
-from config import Config
-from pathlib import Path
+
+import matplotlib
+from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
                              QWidget, QHBoxLayout, QVBoxLayout,
                              QAction, QStatusBar)
-
-import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt, QRunnable, QThreadPool
+
+from config import Config
+from game import Game
+from threads import Worker
 
 matplotlib.use('Qt5Agg')
+
 
 class InputBox(QTextEdit):
 
     def __init__(self, s):
         QTextEdit.__init__(self, s)
-        #self.s must already be present as an attribute in QTextEit so
+        # self.s must already be present as an attribute in QTextEit so
         # when I know this I can reference this instead of self.s
         self.s = s
 
@@ -32,6 +30,7 @@ class InputBox(QTextEdit):
         super(InputBox, self).keyPressEvent(keyEvent)
         if keyEvent.key() == Qt.Key_Return:
             self.s.on_submit()
+
 
 class MplCanvas(FigureCanvasQTAgg):
 
@@ -41,29 +40,11 @@ class MplCanvas(FigureCanvasQTAgg):
         super(MplCanvas, self).__init__(fig)
 
 
-class Worker(QRunnable):
-
-    """
-    Allows func to be run on seperate thread from the gui thread
-    """
-
-    def __init__(self, func, *args, **kwargs):
-        QRunnable.__init__(self)
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
-
-    def run(self):
-        """
-        run function on seperate thread from parent
-        """
-        self.func(*self.args, *self.kwargs)
-
-
 class GUI(Game, QMainWindow):
     def __init__(self, phrases_category: str, config: Config):
+
         self.app = QApplication([])
-        Game.__init__(self,  phrases_category, config)
+        Game.__init__(self, phrases_category, config)
         QMainWindow.__init__(self)
 
         self.sound_thread = QThreadPool()
@@ -77,6 +58,7 @@ class GUI(Game, QMainWindow):
 
         self.processed_swedish_with_accents = None
         self.processed_answer = None
+        self.processed_swedish_no_accents = None
         self.phrases_category = phrases_category
         self.load_phrases()
         self.load_weights()
@@ -86,7 +68,6 @@ class GUI(Game, QMainWindow):
         self.setStatusBar(self.statusBar)
         self.statusBar.addPermanentWidget(self.phrase_category_label)
         self.phrase_category_label.setText(f"category: {self.phrases_category}")
-
 
         control_button_height = 30
         control_button_length = 100
@@ -140,7 +121,6 @@ class GUI(Game, QMainWindow):
         self.a.clicked.connect(self.on_audio)
         horizontal_layout.addWidget(self.a)
 
-
         self.r = QPushButton(self)
         self.r.setText("reset")
 
@@ -151,10 +131,8 @@ class GUI(Game, QMainWindow):
         w.setLayout(vertical_layout)
         self.setCentralWidget(w)
 
-
         menu = self.menuBar()
         categories_menu = menu.addMenu("phrase-categories")
-
 
         for category in self.config.params["phrase-categories"]:
             action = QAction(category, self)
@@ -168,7 +146,9 @@ class GUI(Game, QMainWindow):
     def on_category_selection(self):
         self.phrases_category = self.sender().text()
         self.load_phrases()
-        self.load_weights()
+        load_weights = self.load_weights()
+        if not load_weights:
+            self.reset_weights()
         self.update_plot()
         self.new_phrase()
         self.phrase_category_label.setText(f"category: {self.phrases_category}")
@@ -185,7 +165,7 @@ class GUI(Game, QMainWindow):
         self.weights[index] += self.reward
 
     def decrease_weight(self, index: int):
-        self.weights[index] = max(1, self.weights[index]-self.reward)
+        self.weights[index] = max(1, self.weights[index] - self.reward)
 
     def new_phrase(self):
         self.save_weights()
@@ -211,7 +191,6 @@ class GUI(Game, QMainWindow):
         worker = Worker(self.play_phrase, audio_path)
         self.sound_thread.start(worker)
 
-
     def on_skip(self):
         self.increase_weight(self.selected_index)
         self.save_weights()
@@ -221,14 +200,9 @@ class GUI(Game, QMainWindow):
 
     def on_submit(self):
         answer = self.input_box.toPlainText()
-
-
         self.input_box.setText("")
-
         self.processed_answer = self.preprocess(answer)
-
         self.processed_swedish_with_accents = self.preprocess(self.language2)
-
         self.processed_swedish_no_accents = self.replace_accents(self.processed_swedish_with_accents)
 
         if self.processed_answer == self.processed_swedish_no_accents:
@@ -262,7 +236,6 @@ class GUI(Game, QMainWindow):
             self.save_weights()
             self.update_plot()
 
-
     def check_weights(self, weights: str):
         pass
 
@@ -272,19 +245,14 @@ class GUI(Game, QMainWindow):
 
     def reset_weights(self):
 
-        for i in range(len(self.weights)):
-            self.weights[i] = 1
+        self.weights = len(self.syntax) * [1]
         self.save_weights()
 
     def run(self):
 
-        load_weights = self.ask_load_weights()
-        if load_weights:
-            ret = self.load_weights()
-
-        if not load_weights or not ret:
-            self.weights = len(self.syntax) * [1]
-
+        ret = self.load_weights()
+        if not ret:
+            self.reset_weights()
         self.show()
         self.app.exec()
 
@@ -295,17 +263,20 @@ class GUI(Game, QMainWindow):
         """
 
         self.graph.axes.clear()
-        self.graph.axes.plot(range(len(self.weights)), self.weights, color ="black")
-        y_positions = [1, 3, 5]
+        self.graph.axes.plot(range(len(self.weights)), self.weights, color="black")
+
+        graph_config = self.config.params["graph"]
+        y_positions = graph_config["bar-positions"]
+        bar_colours = graph_config["bar-colours"]
+        show_axis = graph_config["show-axis"]
 
         self.graph.axes.barh(y=y_positions,
                              width=len(self.weights),
                              align="edge",
                              height=2,
-                             color=[[0, 1, 0],
-                                    [0.98823529, 0.85, 0.01],
-                                    [1, 0, 0]])
-        self.graph.axes.axis("off")
+                             color=bar_colours)
+        if not show_axis:
+            self.graph.axes.axis("off")
         self.graph.draw()
 
 

@@ -70,6 +70,8 @@ class Game:
         else:
             return False
 
+
+
     def save_weights(self):
         """saves weights to json file"""
         path = os.path.join("assets", self.phrases_category, "weights.json")

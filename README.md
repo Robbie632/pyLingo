@@ -29,11 +29,8 @@ Say you want to add a set of phrases for the new category "pets", you would do t
 * Add the string "pets" to the phrase-categories list in config.json
 * Add a folder called pets in the assets folder
 * Add a phrases.json file to assets/pets
-* Add a weights.json file to assets/pets
 * Add a audio folder to assets/pets
 * Fill the new phrases.json file with your new phrases, see already present phrases.json file for example
-* Fill the new weights.json with a list of weights, the number of values should be equal to the number of phrases 
-and all be of value 1, see already present wights.json for example
 * Add mp3 audio files to the new audio folder, the filenames must be <number>.mp3
 where <number> is consistent with the order the phrases are found in phrases.json, 
 starting from 0, see files in already present audio folder for example.
