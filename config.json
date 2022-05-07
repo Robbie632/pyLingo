@@ -1,5 +1,5 @@
 {
-  "reward": 1,
+  "reward": 0.2,
   "phrase-categories": ["conversational",
                         "conversational2",
                         "tutoring",

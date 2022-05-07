@@ -188,6 +188,9 @@ class GUI(Game, QMainWindow):
     def update_phrase(self, message: str):
         self.phrase.setText(message)
 
+    def update_input(self, message: str):
+        self.input_box.setText(message)
+
     def on_peek(self):
         self.increase_weight(self.selected_index)
         self.save_weights()
@@ -220,6 +223,7 @@ class GUI(Game, QMainWindow):
             return None
 
     def on_skip(self):
+        self.update_input("")
         self.increase_weight(self.selected_index)
         self.save_weights()
         self.update_plot()
