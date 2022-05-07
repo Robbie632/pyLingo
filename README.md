@@ -20,7 +20,7 @@ sudo apt-get install python3-pyqt5
 ```
 then run tool in terminal:
 ```commandline
-python main.py
+python gui.py
 ```
 ---
 ### Adding new phrases
