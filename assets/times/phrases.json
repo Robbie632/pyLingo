@@ -1,0 +1,27 @@
+{
+  "syntax":
+    [
+      ["one", "en"],
+      ["two", "två"],
+      ["three", "tre"],
+      ["four", "fyra"],
+      ["five", "fem"],
+      ["six", "sex"],
+      ["seven", "sju"],
+      ["eight", "åtta"],
+      ["nine", "nio"],
+      ["ten", "tio"],
+      ["eleven", "elva"],
+      ["twelve", "tolv"],
+      ["half one", "halv två"],
+      ["half three", "halv fyra"],
+      ["half five", "halv sex"],
+      ["half seven", "halv åtta"],
+      ["half nine", "halv tio"],
+      ["half eight", "halv nio"],
+      ["quarter past one", "Kvart över en"],
+      ["quarter past four", "Kvart över fyra"],
+      ["quarter to five", "Kvart i fem"],
+      ["quarter to seven", "Kvart i sju"]
+    ]
+}
