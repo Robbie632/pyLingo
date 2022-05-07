@@ -3,6 +3,7 @@ import os
 from config import Config
 from random import choices
 from playsound import playsound, PlaysoundException
+import string
 
 
 class Game:
@@ -32,7 +33,10 @@ class Game:
         """
         sentence = sentence.strip().replace("\n", "").replace("\t", "")
         sentence = sentence.lower()
-        sentence = sentence.replace("-", " ")
+
+        for p in string.punctuation:
+            sentence = sentence.replace(p, "")
+
         return sentence
 
     def replace_accents(self, sentence):
