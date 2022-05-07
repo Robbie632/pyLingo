@@ -14,6 +14,7 @@ from matplotlib.figure import Figure
 from config import Config
 from game import Game
 from threads import Worker
+from glob import glob
 
 matplotlib.use('Qt5Agg')
 
@@ -194,11 +195,29 @@ class GUI(Game, QMainWindow):
         self.update_feedback(self.language2)
 
     def on_audio(self):
-        audio_path = os.path.join("assets", self.phrases_category, "audio", f"{self.selected_index}.mp3")
+        """
+        Uses current phrase index and searches relevant audio folde for matching file,
+        this method is required because the file ending is unkown
+        """
+        number_file = self.selected_index
+        audio_file = None
 
-        # run function on seperate thread from gui thread
-        worker = Worker(self.play_phrase, audio_path)
-        self.sound_thread.start(worker)
+        audio_folder = os.path.join("assets", self.phrases_category, "audio")
+        if os.path.isdir(audio_folder):
+            relevant_audio_files = os.listdir(audio_folder)
+            for f in relevant_audio_files:
+                if str(number_file) == f.split(".")[0]:
+                    audio_file = f
+                    break
+            if audio_file is None:
+                return None
+            else:
+                audio_path = os.path.join(audio_folder, audio_file)
+                # run function on seperate thread from gui thread
+                worker = Worker(self.play_phrase, audio_path)
+                self.sound_thread.start(worker)
+        else:
+            return None
 
     def on_skip(self):
         self.increase_weight(self.selected_index)
