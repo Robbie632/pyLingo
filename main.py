@@ -141,13 +141,22 @@ class GUI(Game, QMainWindow):
             categories_menu.addSeparator()
 
         self.setMinimumSize(1000, 500)
+        self.initialise_category()
         self.new_phrase()
 
     def on_category_selection(self):
         self.phrases_category = self.sender().text()
+        self.initialise_category()
+
+    def initialise_category(self):
+        """
+        loads phrases and weights,
+        checks weights are as expected given the phrases
+        updates graphics
+        """
         self.load_phrases()
         load_weights = self.load_weights()
-        if not load_weights:
+        if not load_weights or len(self.weights) != len(self.syntax):
             self.reset_weights()
         self.update_plot()
         self.new_phrase()
