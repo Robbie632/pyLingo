@@ -3,7 +3,7 @@ from random import choices
 
 import matplotlib
 from PyQt5.QtCore import Qt, QThreadPool
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
                              QWidget, QHBoxLayout, QVBoxLayout,
@@ -105,26 +105,25 @@ class GUI(Game, QMainWindow):
         horizontal_layout.addWidget(self.submit)
 
         self.p = QPushButton(self)
-        self.p.setText("peek")
+        self.p.setIcon(QIcon('images/peek.png'))
         self.p.setFixedSize(control_button_length, control_button_height)
         self.p.clicked.connect(self.on_peek)
         horizontal_layout.addWidget(self.p)
 
         self.s = QPushButton()
-        self.s.setText("skip")
+        self.s.setIcon(QIcon('images/skip.png'))
         self.s.setFixedSize(control_button_length, control_button_height)
         self.s.clicked.connect(self.on_skip)
         horizontal_layout.addWidget(self.s)
 
         self.a = QPushButton(self)
-        self.a.setText("audio")
+        self.a.setIcon(QIcon('images/audio.png'))
         self.a.setFixedSize(control_button_length, control_button_height)
         self.a.clicked.connect(self.on_audio)
         horizontal_layout.addWidget(self.a)
 
         self.r = QPushButton(self)
-        self.r.setText("reset")
-
+        self.r.setIcon(QIcon('images/reset.png'))
         self.r.setFixedSize(control_button_length, control_button_height)
         self.r.clicked.connect(self.on_reset)
         horizontal_layout.addWidget(self.r)

@@ -35,6 +35,10 @@ Say you want to add a set of phrases for the new category "pets", you would do t
 where <number> is consistent with the order the phrases are found in phrases.json, 
 starting from 0, see files in already present audio folder for example.
 
+---
 
+## References
+
+All symbol-based icons are resources from Flaticon.com
 
 

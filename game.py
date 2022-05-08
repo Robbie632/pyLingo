@@ -27,6 +27,12 @@ class Game:
         """
         raise NotImplementedError
 
+    def on_category_selection(self):
+        raise NotImplementedError
+
+    def initialise_category(self):
+        raise NotImplementedError
+
     def preprocess(self, sentence: str):
         """
         preprocess a sentence
@@ -74,7 +80,8 @@ class Game:
         else:
             return False
 
-
+    def new_phrase(self):
+        raise NotImplementedError
 
     def save_weights(self):
         """saves weights to json file"""
@@ -95,6 +102,33 @@ class Game:
 
     def incorrect(self):
         """give feedback that input was incorrect"""
+        raise NotImplementedError
+
+    def update_feedback(self, message: str):
+        raise NotImplementedError
+
+    def update_phrase(self, message: str):
+        raise NotImplementedError
+
+    def update_input(self, message: str):
+        raise NotImplementedError
+
+    def update_plot(self):
+        raise NotImplementedError
+
+    def on_peek(self):
+        raise NotImplementedError
+
+    def on_audio(self):
+        raise NotImplementedError
+
+    def on_skip(self):
+        raise NotImplementedError
+
+    def on_submit(self):
+        raise NotImplementedError
+
+    def on_reset(self):
         raise NotImplementedError
 
     def check_weights(self, weights: str):
