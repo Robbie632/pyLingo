@@ -4,6 +4,8 @@ from config import Config
 from random import choices
 from playsound import playsound, PlaysoundException
 import string
+import gtts
+from gtts.tts import gTTSError
 
 
 class Game:
@@ -32,6 +34,11 @@ class Game:
 
     def initialise_category(self):
         raise NotImplementedError
+
+    def new_phrase(self):
+        self.save_weights()
+        self.selected_index, self.language1, self.language2 = self.choose_phrase()
+        self.update_phrase(self.language1)
 
     def preprocess(self, sentence: str):
         """
@@ -80,9 +87,6 @@ class Game:
         else:
             return False
 
-    def new_phrase(self):
-        raise NotImplementedError
-
     def save_weights(self):
         """saves weights to json file"""
         path = os.path.join("assets", self.phrases_category, "weights.json")
@@ -99,6 +103,24 @@ class Game:
     def correct(self):
         """give feedback that input was correct"""
         raise NotImplemented
+
+    def get_external_audio(self, path: str, phrase: str) -> bool:
+
+        """
+        If audio file isn't present downloads file from google api
+        """
+
+        try:
+            tts = gtts.gTTS(phrase, lang="sv")
+        except AssertionError as e:
+            print(f"{str(e)} for '{phrase}'")
+            return False
+        try:
+            tts.save(path)
+        except gTTSError as e:
+            print(e)
+            return False
+        return True
 
     def incorrect(self):
         """give feedback that input was incorrect"""

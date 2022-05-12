@@ -1,4 +1,9 @@
-<h3>Our Flask Buttons<h3/>
-    <form method="post" action="/">
-
-    </form>
+<form method="POST" action="/login">
+    <a> {{ swedish }}</a>
+    <a {{ form.user_input.label}} {{form.user_input }}></a>
+    <a href="{{url_for('submit')}}" style="color:black">submit</a>
+    <a href="{{url_for('peek')}}" style="color:black">peek</a>
+    <a href="{{url_for('audio')}}" style="color:black">audio</a>
+    <a href="{{url_for('reset')}}" style="color:black">reset</a>
+    <a href="{{url_for('skip')}}" style="color:black">skip</a>
+</form>

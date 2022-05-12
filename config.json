@@ -1,21 +1,50 @@
 {
-  "reward": 0.2,
-  "phrase-categories": ["conversational",
-                        "conversational2",
-                        "tutoring",
-                        "times",
-                        "cafe"],
-  "accents-lookup": {
-    "å": "a",
-    "ä": "a",
-    "ö": "o"},
-  "graph": {
-    "bar-colours":
-      [[0, 1, 0],
-      [0.98823529, 0.85, 0.01],
-      [1, 0.7, 0.1],
-      [0.95, 0, 0.05]],
-    "bar-positions": [1, 3, 5, 7],
-    "show-axis": true
-  }
+    "reward": 0.4,
+    "phrase-categories": [
+        "conversational",
+        "conversational2",
+        "tutoring",
+        "times",
+        "cafe"
+    ],
+    "accents-lookup": {
+        "\u00e5": "a",
+        "\u00e4": "a",
+        "\u00f6": "o"
+    },
+    "aesthetics": {
+        "font-size": 12,
+        "light-mode": "dark"
+    },
+    "graph": {
+        "bar-colours": [
+            [
+                0.8,
+                0.8,
+                1
+            ],
+            [
+                0.6,
+                0.6,
+                0.8
+            ],
+            [
+                0.4,
+                0.4,
+                0.6
+            ],
+            [
+                0.2,
+                0.2,
+                0.4
+            ]
+        ],
+        "bar-positions": [
+            1,
+            3,
+            5,
+            7
+        ],
+        "show-axis": true
+    }
 }

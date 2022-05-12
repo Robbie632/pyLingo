@@ -7,14 +7,13 @@ from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
                              QWidget, QHBoxLayout, QVBoxLayout,
-                             QAction, QStatusBar)
+                             QAction, QStatusBar, QMessageBox)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 from config import Config
 from game import Game
 from threads import Worker
-from glob import glob
 
 matplotlib.use('Qt5Agg')
 
@@ -79,6 +78,7 @@ class GUI(Game, QMainWindow):
 
         self.phrase.setText("")
         self.phrase.setFixedSize(500, 80)
+        self.set_font_size(self.phrase)
         layout_graph.addWidget(self.phrase)
 
         self.graph = MplCanvas(self, width=3, height=2, dpi=100)
@@ -87,10 +87,8 @@ class GUI(Game, QMainWindow):
 
         self.update_plot()
 
-        input_font = QFont()
-        input_font.setPointSize(14)
         self.input_box = InputBox(self)
-        self.input_box.setFont(input_font)
+        self.set_font_size(self.input_box)
         self.input_box.setFixedSize(500, 50)
         vertical_layout.addWidget(self.input_box)
 
@@ -103,6 +101,8 @@ class GUI(Game, QMainWindow):
         self.submit.setFixedSize(control_button_length, control_button_height)
         self.submit.clicked.connect(self.on_submit)
         horizontal_layout.addWidget(self.submit)
+
+        horizontal_layout.addSpacing(200)
 
         self.p = QPushButton(self)
         self.p.setIcon(QIcon('images/peek.png'))
@@ -122,17 +122,15 @@ class GUI(Game, QMainWindow):
         self.a.clicked.connect(self.on_audio)
         horizontal_layout.addWidget(self.a)
 
-        self.r = QPushButton(self)
-        self.r.setIcon(QIcon('images/reset.png'))
-        self.r.setFixedSize(control_button_length, control_button_height)
-        self.r.clicked.connect(self.on_reset)
-        horizontal_layout.addWidget(self.r)
         vertical_layout.addLayout(horizontal_layout)
         w.setLayout(vertical_layout)
         self.setCentralWidget(w)
 
         menu = self.menuBar()
-        categories_menu = menu.addMenu("phrase-categories")
+        categories_menu = menu.addMenu("categories")
+        settings_menu = menu.addMenu("")
+
+        settings_menu.setIcon(QIcon('images/settings.png'))
 
         for category in self.config.params["phrase-categories"]:
             action = QAction(category, self)
@@ -140,13 +138,61 @@ class GUI(Game, QMainWindow):
             categories_menu.addAction(action)
             categories_menu.addSeparator()
 
-        self.setMinimumSize(1000, 500)
+        font1 = QAction("font: +", self)
+        font2 = QAction("font: -", self)
+        reset_weights = QAction("reset weights", self)
+
+        font1.triggered.connect(self.on_increase_font)
+        font2.triggered.connect(self.on_decrease_font)
+        reset_weights.triggered.connect(self.on_reset)
+
+        settings_menu.addAction(font1)
+        settings_menu.addAction(font2)
+        settings_menu.addAction(reset_weights)
+
+        self.popup = QMessageBox()
+
+        self.setFixedSize(1000, 500)
         self.initialise_category()
         self.new_phrase()
+
+    def on_increase_font(self):
+
+        new_size = self.config.params["aesthetics"]["font-size"] + 1
+        self.config.params["aesthetics"]["font-size"] = new_size
+        self.config.write_to_file()
+        self.set_font_size(self.input_box)
+        self.set_font_size(self.phrase)
+
+    def update_popup_text(self, message: str):
+        self.popup.setText(message)
+
+    def on_decrease_font(self):
+        new_size = self.config.params["aesthetics"]["font-size"] - 1
+        self.config.params["aesthetics"]["font-size"] = new_size
+        self.config.write_to_file()
+        self.set_font_size(self.input_box)
+        self.set_font_size(self.phrase)
 
     def on_category_selection(self):
         self.phrases_category = self.sender().text()
         self.initialise_category()
+        self.update_popup_text(f"changed category to: {str(self.phrases_category)}")
+        self.popup.exec()
+
+    def set_font_size(self, widget):
+
+        """
+        sets font size of widget
+        """
+        font = QFont()
+
+        font.setPointSize(self.config.params["aesthetics"]["font-size"])
+        try:
+            widget.setFont(font)
+        except AttributeError as e:
+            print(f"couldnt set font type for {str(widget)}")
+
 
     def initialise_category(self):
         """
@@ -162,24 +208,11 @@ class GUI(Game, QMainWindow):
         self.new_phrase()
         self.phrase_category_label.setText(f"category: {self.phrases_category}")
 
-    def choose_phrase(self):
-        selected_syntax = choices(self.syntax, weights=self.weights)
-        selected_index = self.syntax.index(selected_syntax[0])
-        language1 = selected_syntax[0][0]
-        language2 = selected_syntax[0][1]
-
-        return selected_index, language1, language2
-
     def increase_weight(self, index: int):
         self.weights[index] += self.reward
 
     def decrease_weight(self, index: int):
         self.weights[index] = max(1, self.weights[index] - self.reward)
-
-    def new_phrase(self):
-        self.save_weights()
-        self.selected_index, self.language1, self.language2 = self.choose_phrase()
-        self.update_phrase(self.language1)
 
     def update_feedback(self, message: str):
         self.feedback.setText(message)
@@ -212,12 +245,15 @@ class GUI(Game, QMainWindow):
                     audio_file = f
                     break
             if audio_file is None:
-                return None
+                audio_path = os.path.join(audio_folder, f"{str(number_file)}.mp3")
+                ret = self.get_external_audio(audio_path, self.language2)
+                if not ret:
+                    return None
             else:
                 audio_path = os.path.join(audio_folder, audio_file)
-                # run function on seperate thread from gui thread
-                worker = Worker(self.play_phrase, audio_path)
-                self.sound_thread.start(worker)
+            # run function on seperate thread from gui thread
+            worker = Worker(self.play_phrase, audio_path)
+            self.sound_thread.start(worker)
         else:
             return None
 
@@ -248,7 +284,8 @@ class GUI(Game, QMainWindow):
     def on_reset(self):
         self.reset_weights()
         self.update_plot()
-        self.update_feedback("weights were reset")
+        self.update_popup_text("weights were reset")
+        self.popup.exec()
 
     def intro(self):
         pass

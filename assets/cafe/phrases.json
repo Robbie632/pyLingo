@@ -5,6 +5,13 @@
   ["saffron bun", "Lussekat"],
   ["cinnamon bun", "Kanelbulle"],
   ["semla", "semla"],
-  ["chocolate balls", "Chokladboll"],
-  ["card or cash?", "Kort eller kontanter?"]
+  ["chocolate ball", "Chokladboll"],
+  ["card or cash?", "Kort eller kontanter?"],
+  ["then it will be 48 kronor.", "Då blir det fyrtioåtta kronor"],
+  ["then", "då"],
+  ["becomes", "blir"],
+  ["order", "beställa"],
+  ["pay", "betalla"],
+  ["I will pay with card", "jag betalla med kort"],
+  ["Sorry I cannot help you", "Förlåt jag kan inte hjälpa dig"]
 ]}
