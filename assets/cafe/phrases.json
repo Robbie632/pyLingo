@@ -13,5 +13,12 @@
   ["order", "beställa"],
   ["pay", "betalla"],
   ["I will pay with card", "jag betalla med kort"],
-  ["Sorry I cannot help you", "Förlåt jag kan inte hjälpa dig"]
+  ["Sorry I cannot help you", "Förlåt jag kan inte hjälpa dig"],
+  ["anything else", "nånting annat"],
+  ["I have ordered", "Jag har beställt"],
+  ["I pay", "Jag betalar"],
+  ["I have paid", "Jag har betalat"],
+  ["I often pay with card", "Jag betalar ofta med kort"],
+  ["Usually I pay with card", "Vanligtvis betalar jag med kort"],
+  ["usually", "vanligtvis"]
 ]}

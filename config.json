@@ -2,10 +2,10 @@
     "reward": 0.4,
     "phrase-categories": [
         "conversational",
-        "conversational2",
         "tutoring",
         "times",
-        "cafe"
+        "cafe",
+        "restaurant"
     ],
     "accents-lookup": {
         "\u00e5": "a",
