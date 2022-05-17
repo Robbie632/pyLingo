@@ -13,18 +13,19 @@ from matplotlib.figure import Figure
 
 from config import Config
 from game import Game
-from threads import Worker
+from threads import Worker#
+import json
 
 matplotlib.use('Qt5Agg')
 
-class AnotherWindow(QWidget):
+class AddPhraseWindow(QWidget):
     """
-    This "window" is a QWidget. If it has no parent, it
-    will appear as a free-floating window as we want.
+    Window for adding new phrase
     """
-    def __init__(self, main_window):
+    def __init__(self, main_window, category):
         super().__init__()
         self.main_window = main_window
+        self.category = category
         layout = QVBoxLayout()
         self.setWindowTitle("phrase addition")
         self.input_box_1 = QTextEdit()
@@ -34,9 +35,10 @@ class AnotherWindow(QWidget):
 
         self.submit = QPushButton(self)
         self.submit.setText("submit")
+        self.submit.setFixedSize(100, 30)
         self.submit.clicked.connect(self.on_submit)
 
-        self.text1 = QLabel("mother tongue phrase")
+        self.text1 = QLabel("known phrase")
         self.text2 = QLabel("new language phrase")
 
         layout.addWidget(self.text1)
@@ -49,18 +51,34 @@ class AnotherWindow(QWidget):
         self.setFixedSize(800, 400)
         self.setLayout(layout)
 
-    def on_submit(self):
-        print("clicked submit")
-        # get category selected from submenu
-        category = None
-        # load syntax associated with selected category
-        syntax = None
+    def on_submit(self) -> None:
 
-        #syntax.append([self.input_box_1.text(), self.input_box_2.text()])
-        #self.main_window.save_phrases(category, syntax)
+        syntax = self.load_phrases(self.category)
+        mother_tongue = self.input_box_1.toPlainText()
+        new_language = self.input_box_2.toPlainText()
+
+        syntax["syntax"].append([mother_tongue, new_language])
+
+        self.write_phrases(self.category, syntax)
         self.input_box_1.clear()
         self.input_box_2.clear()
-        # pop up box giving feedback
+        self.close()
+        feedback = QMessageBox()
+        feedback.setText(f"you have added a phrase pair to category: {self.category}")
+        feedback.exec()
+
+    def load_phrases(self, category: str) -> dict:
+        path = os.path.join("assets", category, "phrases.json")
+
+        with open(path, "r") as f:
+            syntax = json.load(f)
+        return syntax
+
+    def write_phrases(self, category: str, syntax: dict) -> list:
+        path = os.path.join("assets", category, "phrases.json")
+
+        with open(path, "w") as f:
+            json.dump(syntax, f, indent=4)
 
 
 class InputBox(QTextEdit):
@@ -172,9 +190,7 @@ class GUI(Game, QMainWindow):
 
         menu = self.menuBar()
         categories_menu = menu.addMenu("categories")
-        settings_menu = menu.addMenu("")
-
-        settings_menu.setIcon(QIcon('images/settings.png'))
+        settings_menu = menu.addMenu("settings")
 
         for category in self.config.params["phrase-categories"]:
             action = QAction(category, self)
@@ -193,14 +209,18 @@ class GUI(Game, QMainWindow):
         add_phrases.triggered.connect(self.on_add_phrase)
 
         settings_menu.addAction(font1)
+        settings_menu.addSeparator()
         settings_menu.addAction(font2)
+        settings_menu.addSeparator()
         settings_menu.addAction(reset_weights)
+        settings_menu.addSeparator()
         add_phrase = settings_menu.addMenu("Add phrase")
 
         for category in self.config.params["phrase-categories"]:
             action = QAction(category, self)
             action.triggered.connect(self.on_add_phrase)
             add_phrase.addAction(action)
+            add_phrase.addSeparator()
 
         self.popup = QMessageBox()
 
@@ -215,6 +235,7 @@ class GUI(Game, QMainWindow):
         self.config.write_to_file()
         self.set_font_size(self.input_box)
         self.set_font_size(self.phrase)
+        self.set_font_size(self.feedback)
 
     def update_popup_text(self, message: str):
         self.popup.setText(message)
@@ -225,6 +246,7 @@ class GUI(Game, QMainWindow):
         self.config.write_to_file()
         self.set_font_size(self.input_box)
         self.set_font_size(self.phrase)
+        self.set_font_size(self.feedback)
 
     def on_category_selection(self):
         self.phrases_category = self.sender().text()
@@ -234,11 +256,11 @@ class GUI(Game, QMainWindow):
 
     def on_add_phrase(self):
         print("on_add_phrase()")
-        print(self.sender().text())
+        selected_category = self.sender().text()
 
         # make new window with two text boxes, one for mother tongue, other for new language
         # add phrases to list then add to self.syntax then write self.syntax to file
-        self.new_phrase_window = AnotherWindow(self)
+        self.new_phrase_window = AddPhraseWindow(self, selected_category)
         self.new_phrase_window.show()
 
     def set_font_size(self, widget):

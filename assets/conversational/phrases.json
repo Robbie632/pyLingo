@@ -1,63 +1,248 @@
-{"syntax":[
-      ["We went birdwatching", "Vi fågelskådade"],
-      ["We went for Fika", "Vi fikade"],
-      ["We ate in a restaurant", "Vi at på en restaurang"],
-      ["We did some gardening", "Vi gjorde lite tradgardsarbete"],
-      ["We did some DIY", "Vi gjorde lite går-det-själv-arbete"],
-      ["How was your coffee", "Hur var ditt kaffe"],
-      ["How was your cake", "Hur var din kaka"],
-      ["Did you sleep well", "Sov du gott"],
-      ["Would you like some breakfast", "Skulle du vilja ha lite frukost"],
-      ["Would you like some coffee", "Skulle du vilja ha lite kaffe"],
-      ["What time is it please", "Vad är klockan tack"],
-      ["What do you want to do today", "Vad vill du göra idag"],
-      ["The weather is really nice today", "Vadret ar riktigt trevligt idag"],
-      ["Do you want any condiments", "Vill du ha några tillbehor"],
-      ["What time do you want to be picked up", "vilken tid vill du bli hämtad"],
-      ["Pardon me", "Ursakta mig"],
-      ["I am glad you slept well", "Jag ar glad att du sov gott"],
-      ["I slept well thanks", "Jag sov gott tack"],
-      ["I am tired", "Jag ar trott"],
-      ["I am excited", "Jag ar exalterad"],
-      ["Were you warm enough last night", "Var du tillrackligt varm i natt"],
-      ["What would you like to do tomorrow", "vad skulle du vilja gora imorgon"],
-      ["Where would you like to go today", "vart skulle du vilja åka idag"],
-      ["really", "riktigt"],
-      ["sufficiently", "tillräckligt"],
-      ["condiments", "tillbehör"],
-      ["I need to go to the toilet", "jag behöver gå på toaletten"],
-      ["Where are the toilets?", "var är toaletten"],
-      ["I cannot wait until we go to dinner", "Jag kan inte vänta tills vi går på middag"],
-      ["I need a coffee", "jag behöver en kaffe"],
-      ["I cannot find my phone", "Jag kan inte hitta min telefon"],
-      ["That is a nice view", "Det där ar en fin utsikt"],
-      ["Shall we get a coffee?", "Ska vi ta en kaffe"],
-      ["I thought there used to be better food here", "Jag trodde det var bättre mat här"],
-      ["Do you like the food?", "gillar du maten"],
-      ["shall we go?", "ska vi gå"],
-      ["Are you finished?","Är du klar"],
-      ["Look at that house", "Titta på det dar huset"],
-      ["Look at those plants", "Titta på de dar växterna"],
-      ["That house is so nice", "det där huset är så fint"],
-      ["This is lovely", "Det här är härligt"],
-      ["I am happy", "jag är glad"],
-      ["are you happy?", "är du glad"],
-      ["I am happy with my app", "jag är nöjd med min app"],
-      ["I feel very rested", "Jag känner mig mycket utvilad"],
-      ["When did you get up?", "när gick du upp"],
-      ["I have had coffee", "jag har druckit kaffe"],
-      ["yes, if there is time", "ja, om det finns tid"],
-      ["what did you do this week?", "Vad gjorde du i vecka"],
-      ["I did", "jag gjorde"],
-      ["to do", "att gora"],
-      ["I will do", "jag ska gora"],
-      ["to go", "att gå"],
-      ["I went", "jag gick"],
-      ["shall we walk?", "ska vi går?"],
-      ["Are you excited to look at glasses", "är du exalterad over att titta på gläsogn"],
-      ["I need a second coffee", "Jag behöver en andra Kaffe"],
-      ["I am so thirsty", "Jag ar sa törstig"],
-      ["I am sorry", "Jag beklagar"],
-      ["I take", "jag tar"],
-      ["I have taken", "Jag har tagit"]
-]}
+{
+    "syntax": [
+        [
+            "We went birdwatching",
+            "Vi f\u00e5gelsk\u00e5dade"
+        ],
+        [
+            "We went for Fika",
+            "Vi fikade"
+        ],
+        [
+            "We ate in a restaurant",
+            "Vi at p\u00e5 en restaurang"
+        ],
+        [
+            "We did some gardening",
+            "Vi gjorde lite tradgardsarbete"
+        ],
+        [
+            "We did some DIY",
+            "Vi gjorde lite g\u00e5r-det-sj\u00e4lv-arbete"
+        ],
+        [
+            "How was your coffee",
+            "Hur var ditt kaffe"
+        ],
+        [
+            "How was your cake",
+            "Hur var din kaka"
+        ],
+        [
+            "Did you sleep well",
+            "Sov du gott"
+        ],
+        [
+            "Would you like some breakfast",
+            "Skulle du vilja ha lite frukost"
+        ],
+        [
+            "Would you like some coffee",
+            "Skulle du vilja ha lite kaffe"
+        ],
+        [
+            "What time is it please",
+            "Vad \u00e4r klockan tack"
+        ],
+        [
+            "What do you want to do today",
+            "Vad vill du g\u00f6ra idag"
+        ],
+        [
+            "The weather is really nice today",
+            "Vadret ar riktigt trevligt idag"
+        ],
+        [
+            "Do you want any condiments",
+            "Vill du ha n\u00e5gra tillbehor"
+        ],
+        [
+            "What time do you want to be picked up",
+            "vilken tid vill du bli h\u00e4mtad"
+        ],
+        [
+            "Pardon me",
+            "Ursakta mig"
+        ],
+        [
+            "I am glad you slept well",
+            "Jag ar glad att du sov gott"
+        ],
+        [
+            "I slept well thanks",
+            "Jag sov gott tack"
+        ],
+        [
+            "I am tired",
+            "Jag ar trott"
+        ],
+        [
+            "I am excited",
+            "Jag ar exalterad"
+        ],
+        [
+            "Were you warm enough last night",
+            "Var du tillrackligt varm i natt"
+        ],
+        [
+            "What would you like to do tomorrow",
+            "vad skulle du vilja gora imorgon"
+        ],
+        [
+            "Where would you like to go today",
+            "vart skulle du vilja \u00e5ka idag"
+        ],
+        [
+            "really",
+            "riktigt"
+        ],
+        [
+            "sufficiently",
+            "tillr\u00e4ckligt"
+        ],
+        [
+            "condiments",
+            "tillbeh\u00f6r"
+        ],
+        [
+            "I need to go to the toilet",
+            "jag beh\u00f6ver g\u00e5 p\u00e5 toaletten"
+        ],
+        [
+            "Where are the toilets?",
+            "var \u00e4r toaletten"
+        ],
+        [
+            "I cannot wait until we go to dinner",
+            "Jag kan inte v\u00e4nta tills vi g\u00e5r p\u00e5 middag"
+        ],
+        [
+            "I need a coffee",
+            "jag beh\u00f6ver en kaffe"
+        ],
+        [
+            "I cannot find my phone",
+            "Jag kan inte hitta min telefon"
+        ],
+        [
+            "That is a nice view",
+            "Det d\u00e4r ar en fin utsikt"
+        ],
+        [
+            "Shall we get a coffee?",
+            "Ska vi ta en kaffe"
+        ],
+        [
+            "I thought there used to be better food here",
+            "Jag trodde det var b\u00e4ttre mat h\u00e4r"
+        ],
+        [
+            "Do you like the food?",
+            "gillar du maten"
+        ],
+        [
+            "shall we go?",
+            "ska vi g\u00e5"
+        ],
+        [
+            "Are you finished?",
+            "\u00c4r du klar"
+        ],
+        [
+            "Look at that house",
+            "Titta p\u00e5 det dar huset"
+        ],
+        [
+            "Look at those plants",
+            "Titta p\u00e5 de dar v\u00e4xterna"
+        ],
+        [
+            "That house is so nice",
+            "det d\u00e4r huset \u00e4r s\u00e5 fint"
+        ],
+        [
+            "This is lovely",
+            "Det h\u00e4r \u00e4r h\u00e4rligt"
+        ],
+        [
+            "I am happy",
+            "jag \u00e4r glad"
+        ],
+        [
+            "are you happy?",
+            "\u00e4r du glad"
+        ],
+        [
+            "I am happy with my app",
+            "jag \u00e4r n\u00f6jd med min app"
+        ],
+        [
+            "I feel very rested",
+            "Jag k\u00e4nner mig mycket utvilad"
+        ],
+        [
+            "When did you get up?",
+            "n\u00e4r gick du upp"
+        ],
+        [
+            "I have had coffee",
+            "jag har druckit kaffe"
+        ],
+        [
+            "yes, if there is time",
+            "ja, om det finns tid"
+        ],
+        [
+            "what did you do this week?",
+            "Vad gjorde du i vecka"
+        ],
+        [
+            "I did",
+            "jag gjorde"
+        ],
+        [
+            "to do",
+            "att gora"
+        ],
+        [
+            "I will do",
+            "jag ska gora"
+        ],
+        [
+            "to go",
+            "att g\u00e5"
+        ],
+        [
+            "I went",
+            "jag gick"
+        ],
+        [
+            "shall we walk?",
+            "ska vi g\u00e5r?"
+        ],
+        [
+            "Are you excited to look at glasses",
+            "\u00e4r du exalterad over att titta p\u00e5 gl\u00e4sogn"
+        ],
+        [
+            "I need a second coffee",
+            "Jag beh\u00f6ver en andra Kaffe"
+        ],
+        [
+            "I am so thirsty",
+            "Jag ar sa t\u00f6rstig"
+        ],
+        [
+            "I am sorry",
+            "Jag beklagar"
+        ],
+        [
+            "I take",
+            "jag tar"
+        ],
+        [
+            "I have taken",
+            "Jag har tagit"
+        ]
+    ]
+}

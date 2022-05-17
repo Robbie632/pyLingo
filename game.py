@@ -191,7 +191,7 @@ class Game:
         path = os.path.join("assets", category, "phrases.json")
 
         with open(path, "w") as f:
-            json.dump({"syntax": syntax})
+            json.dump({"syntax": syntax}, f)
 
 
     def choose_phrase(self) -> (int, str, str):
