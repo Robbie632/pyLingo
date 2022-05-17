@@ -186,6 +186,14 @@ class Game:
         with open(path, "r") as f:
             self.syntax = json.load(f)["syntax"]
 
+    def save_phrases(self, category: str, syntax: list):
+
+        path = os.path.join("assets", category, "phrases.json")
+
+        with open(path, "w") as f:
+            json.dump({"syntax": syntax})
+
+
     def choose_phrase(self) -> (int, str, str):
         """
         Chooses phrase to test with

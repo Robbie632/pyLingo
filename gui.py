@@ -17,6 +17,51 @@ from threads import Worker
 
 matplotlib.use('Qt5Agg')
 
+class AnotherWindow(QWidget):
+    """
+    This "window" is a QWidget. If it has no parent, it
+    will appear as a free-floating window as we want.
+    """
+    def __init__(self, main_window):
+        super().__init__()
+        self.main_window = main_window
+        layout = QVBoxLayout()
+        self.setWindowTitle("phrase addition")
+        self.input_box_1 = QTextEdit()
+        self.input_box_2 = QTextEdit()
+        self.input_box_1.setFixedSize(500, 50)
+        self.input_box_2.setFixedSize(500, 50)
+
+        self.submit = QPushButton(self)
+        self.submit.setText("submit")
+        self.submit.clicked.connect(self.on_submit)
+
+        self.text1 = QLabel("mother tongue phrase")
+        self.text2 = QLabel("new language phrase")
+
+        layout.addWidget(self.text1)
+        layout.addWidget(self.input_box_1)
+        layout.addSpacing(50)
+        layout.addWidget(self.text2)
+        layout.addWidget(self.input_box_2)
+        layout.addSpacing(25)
+        layout.addWidget(self.submit)
+        self.setFixedSize(800, 400)
+        self.setLayout(layout)
+
+    def on_submit(self):
+        print("clicked submit")
+        # get category selected from submenu
+        category = None
+        # load syntax associated with selected category
+        syntax = None
+
+        #syntax.append([self.input_box_1.text(), self.input_box_2.text()])
+        #self.main_window.save_phrases(category, syntax)
+        self.input_box_1.clear()
+        self.input_box_2.clear()
+        # pop up box giving feedback
+
 
 class InputBox(QTextEdit):
 
@@ -30,7 +75,6 @@ class InputBox(QTextEdit):
         super(InputBox, self).keyPressEvent(keyEvent)
         if keyEvent.key() == Qt.Key_Return:
             self.s.on_submit()
-
 
 class MplCanvas(FigureCanvasQTAgg):
 
@@ -141,14 +185,22 @@ class GUI(Game, QMainWindow):
         font1 = QAction("font: +", self)
         font2 = QAction("font: -", self)
         reset_weights = QAction("reset weights", self)
+        add_phrases = QAction("Add phrase", self)
 
         font1.triggered.connect(self.on_increase_font)
         font2.triggered.connect(self.on_decrease_font)
         reset_weights.triggered.connect(self.on_reset)
+        add_phrases.triggered.connect(self.on_add_phrase)
 
         settings_menu.addAction(font1)
         settings_menu.addAction(font2)
         settings_menu.addAction(reset_weights)
+        add_phrase = settings_menu.addMenu("Add phrase")
+
+        for category in self.config.params["phrase-categories"]:
+            action = QAction(category, self)
+            action.triggered.connect(self.on_add_phrase)
+            add_phrase.addAction(action)
 
         self.popup = QMessageBox()
 
@@ -179,6 +231,15 @@ class GUI(Game, QMainWindow):
         self.initialise_category()
         self.update_popup_text(f"changed category to: {str(self.phrases_category)}")
         self.popup.exec()
+
+    def on_add_phrase(self):
+        print("on_add_phrase()")
+        print(self.sender().text())
+
+        # make new window with two text boxes, one for mother tongue, other for new language
+        # add phrases to list then add to self.syntax then write self.syntax to file
+        self.new_phrase_window = AnotherWindow(self)
+        self.new_phrase_window.show()
 
     def set_font_size(self, widget):
 
