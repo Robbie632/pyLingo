@@ -27,11 +27,12 @@ class AddPhraseWindow(QWidget):
         self.main_window = main_window
         self.category = category
         layout = QVBoxLayout()
+        info = QLabel("new line for each phrase, seperate lines with *")
         self.setWindowTitle("phrase addition")
         self.input_box_1 = QTextEdit()
         self.input_box_2 = QTextEdit()
-        self.input_box_1.setFixedSize(500, 50)
-        self.input_box_2.setFixedSize(500, 50)
+        self.input_box_1.setFixedSize(600, 200)
+        self.input_box_2.setFixedSize(600, 200)
 
         self.submit = QPushButton(self)
         self.submit.setText("submit")
@@ -40,7 +41,7 @@ class AddPhraseWindow(QWidget):
 
         self.text1 = QLabel("known phrase")
         self.text2 = QLabel("new language phrase")
-
+        layout.addWidget(info)
         layout.addWidget(self.text1)
         layout.addWidget(self.input_box_1)
         layout.addSpacing(50)
@@ -48,23 +49,30 @@ class AddPhraseWindow(QWidget):
         layout.addWidget(self.input_box_2)
         layout.addSpacing(25)
         layout.addWidget(self.submit)
-        self.setFixedSize(800, 400)
+        self.setFixedSize(800, 800)
         self.setLayout(layout)
 
     def on_submit(self) -> None:
 
-        syntax = self.load_phrases(self.category)
-        mother_tongue = self.input_box_1.toPlainText()
-        new_language = self.input_box_2.toPlainText()
-
-        syntax["syntax"].append([mother_tongue, new_language])
-
-        self.write_phrases(self.category, syntax)
-        self.input_box_1.clear()
-        self.input_box_2.clear()
-        self.close()
         feedback = QMessageBox()
-        feedback.setText(f"you have added a phrase pair to category: {self.category}")
+
+        syntax = self.load_phrases(self.category)
+        mother_tongue_phrases = self.input_box_1.toPlainText().split("*")
+        new_language_phrases = self.input_box_2.toPlainText().split("*")
+
+        if len(mother_tongue_phrases) != len(new_language_phrases):
+            feedback.setText("please enter the same number of phrases in each box")
+        else:
+            for mt, nl in zip(mother_tongue_phrases, new_language_phrases):
+
+                syntax["syntax"].append([self.main_window.preprocess(mt), self.main_window.preprocess(nl)])
+
+            self.write_phrases(self.category, syntax)
+
+            self.input_box_1.clear()
+            self.input_box_2.clear()
+            feedback.setText(f"you have added a phrase pair to category: {self.category}")
+
         feedback.exec()
 
     def load_phrases(self, category: str) -> dict:
@@ -201,7 +209,7 @@ class GUI(Game, QMainWindow):
         font1 = QAction("font: +", self)
         font2 = QAction("font: -", self)
         reset_weights = QAction("reset weights", self)
-        add_phrases = QAction("Add phrase", self)
+        add_phrases = QAction("Add phrase(s)", self)
 
         font1.triggered.connect(self.on_increase_font)
         font2.triggered.connect(self.on_decrease_font)
