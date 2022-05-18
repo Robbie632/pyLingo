@@ -27,8 +27,8 @@ class AddPhraseWindow(QWidget):
         self.main_window = main_window
         self.category = category
         layout = QVBoxLayout()
-        info = QLabel("new line for each phrase, seperate lines with *")
-        self.setWindowTitle("phrase addition")
+        info = QLabel("Add a new line for each phrase, seperate lines with *")
+        self.setWindowTitle("pyLingo-phrase addition")
         self.input_box_1 = QTextEdit()
         self.input_box_2 = QTextEdit()
         self.input_box_1.setFixedSize(600, 200)
@@ -39,8 +39,8 @@ class AddPhraseWindow(QWidget):
         self.submit.setFixedSize(100, 30)
         self.submit.clicked.connect(self.on_submit)
 
-        self.text1 = QLabel("known phrase")
-        self.text2 = QLabel("new language phrase")
+        self.text1 = QLabel("known phrase(s)")
+        self.text2 = QLabel("new language phrase(s)")
         layout.addWidget(info)
         layout.addWidget(self.text1)
         layout.addWidget(self.input_box_1)
@@ -62,13 +62,12 @@ class AddPhraseWindow(QWidget):
 
         if len(mother_tongue_phrases) != len(new_language_phrases):
             feedback.setText("please enter the same number of phrases in each box")
+        elif mother_tongue_phrases[0] == "" and len(mother_tongue_phrases) == 1:
+            feedback.setText("Please enter some text before submitting")
         else:
             for mt, nl in zip(mother_tongue_phrases, new_language_phrases):
-
                 syntax["syntax"].append([self.main_window.preprocess(mt), self.main_window.preprocess(nl)])
-
             self.write_phrases(self.category, syntax)
-
             self.input_box_1.clear()
             self.input_box_2.clear()
             feedback.setText(f"you have added a phrase pair to category: {self.category}")
@@ -143,7 +142,7 @@ class GUI(Game, QMainWindow):
         control_button_length = 100
         self.tries = 0
 
-        self.setWindowTitle("pyLingo")
+        self.setWindowTitle("pyLingo-Home")
         self.phrase = QLabel(self)
 
         self.phrase.setText("")
@@ -197,8 +196,8 @@ class GUI(Game, QMainWindow):
         self.setCentralWidget(w)
 
         menu = self.menuBar()
-        categories_menu = menu.addMenu("categories")
-        settings_menu = menu.addMenu("settings")
+        categories_menu = menu.addMenu("Categories")
+        settings_menu = menu.addMenu("Settings")
 
         for category in self.config.params["phrase-categories"]:
             action = QAction(category, self)
@@ -206,9 +205,9 @@ class GUI(Game, QMainWindow):
             categories_menu.addAction(action)
             categories_menu.addSeparator()
 
-        font1 = QAction("font: +", self)
-        font2 = QAction("font: -", self)
-        reset_weights = QAction("reset weights", self)
+        font1 = QAction("Font: +", self)
+        font2 = QAction("Font: -", self)
+        reset_weights = QAction("Reset weights", self)
         add_phrases = QAction("Add phrase(s)", self)
 
         font1.triggered.connect(self.on_increase_font)
