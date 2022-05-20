@@ -3,6 +3,9 @@ import os
 from config import Config
 from random import choices
 from playsound import playsound, PlaysoundException
+import string
+import gtts
+from gtts.tts import gTTSError
 
 
 class Game:
@@ -26,13 +29,27 @@ class Game:
         """
         raise NotImplementedError
 
+    def on_category_selection(self):
+        raise NotImplementedError
+
+    def initialise_category(self):
+        raise NotImplementedError
+
+    def new_phrase(self):
+        self.save_weights()
+        self.selected_index, self.language1, self.language2 = self.choose_phrase()
+        self.update_phrase(self.language1)
+
     def preprocess(self, sentence: str):
         """
         preprocess a sentence
         """
         sentence = sentence.strip().replace("\n", "").replace("\t", "")
         sentence = sentence.lower()
-        sentence = sentence.replace("-", " ")
+
+        for p in string.punctuation:
+            sentence = sentence.replace(p, "")
+
         return sentence
 
     def replace_accents(self, sentence):
@@ -70,8 +87,6 @@ class Game:
         else:
             return False
 
-
-
     def save_weights(self):
         """saves weights to json file"""
         path = os.path.join("assets", self.phrases_category, "weights.json")
@@ -89,8 +104,53 @@ class Game:
         """give feedback that input was correct"""
         raise NotImplemented
 
+    def get_external_audio(self, path: str, phrase: str) -> bool:
+
+        """
+        If audio file isn't present downloads file from google api
+        """
+
+        try:
+            tts = gtts.gTTS(phrase, lang="sv")
+        except AssertionError as e:
+            print(f"{str(e)} for '{phrase}'")
+            return False
+        try:
+            tts.save(path)
+        except gTTSError as e:
+            print(e)
+            return False
+        return True
+
     def incorrect(self):
         """give feedback that input was incorrect"""
+        raise NotImplementedError
+
+    def update_feedback(self, message: str):
+        raise NotImplementedError
+
+    def update_phrase(self, message: str):
+        raise NotImplementedError
+
+    def update_input(self, message: str):
+        raise NotImplementedError
+
+    def update_plot(self):
+        raise NotImplementedError
+
+    def on_peek(self):
+        raise NotImplementedError
+
+    def on_audio(self):
+        raise NotImplementedError
+
+    def on_skip(self):
+        raise NotImplementedError
+
+    def on_submit(self):
+        raise NotImplementedError
+
+    def on_reset(self):
         raise NotImplementedError
 
     def check_weights(self, weights: str):
@@ -125,6 +185,14 @@ class Game:
 
         with open(path, "r") as f:
             self.syntax = json.load(f)["syntax"]
+
+    def save_phrases(self, category: str, syntax: list):
+
+        path = os.path.join("assets", category, "phrases.json")
+
+        with open(path, "w") as f:
+            json.dump({"syntax": syntax}, f)
+
 
     def choose_phrase(self) -> (int, str, str):
         """

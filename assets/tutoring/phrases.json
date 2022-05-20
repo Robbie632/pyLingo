@@ -10,6 +10,10 @@
     ["Shall I share my screen?", "ska jag dela min skärm"],
     ["I understand", "jag förstår"],
     ["I completed the homework", "Jag gjorde klart läxan"],
-    ["homework", "läxa"]
+    ["homework", "läxa"],
+    ["I have a question", "Jag har en fråga"],
+    ["I have two questions", "Jag har tva frågor"],
+    ["I know the answer", "Jag vet svaret"],
+    ["It is correct", "det är här rätt"]
   ]
 }
