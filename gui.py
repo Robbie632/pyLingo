@@ -1,6 +1,6 @@
 import os
 from random import choices
-
+from typing import List, Tuple
 import matplotlib
 from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtGui import QFont, QIcon, QBrush, QPen, QColor
@@ -151,30 +151,17 @@ class GUI(Game, QMainWindow):
         self.set_font_size(self.phrase)
         layout_graph.addWidget(self.phrase)
 
-        # self.graph = MplCanvas(self, width=3, height=2, dpi=100)
-        # layout_graph.addWidget(self.graph)
-        # vertical_layout.addLayout(layout_graph)
-        graphics_height = 200
-        scene = QGraphicsScene(0, 0, graphics_height, graphics_height)
-        bulllseye_fills = []
-        bullseye_radii = []
-        bullseye_items = []
-        # loop through above and do below for each circle
-        
-        brush1 = QBrush(QColor(255, 255, 255))
-        brush2 = QBrush(QColor(0, 0, 0))
-        pen_line = QPen(QColor(0, 0, 0))
-        r1 = 125
-        r2 = 100
-        graphic1 = QGraphicsEllipseItem((graphics_height/2)-r1, (graphics_height/2)-r1, 2*r1, 2*r1)
-        graphic2 = QGraphicsEllipseItem((graphics_height/2)-r2, (graphics_height/2)-r2, 2*r2, 2*r2)
-        graphic1.setBrush(brush1)
-        graphic1.setPen(pen_line)
-        graphic2.setPen(pen_line)
-        graphic2.setBrush(brush2)
-        scene.addItem(graphic1)
-        scene.addItem(graphic2)
-        view = QGraphicsView(scene)
+        self.graphics_height = 200
+        self.bullseye_scene = QGraphicsScene(0, 0, self.graphics_height, self.graphics_height)
+
+        bulllseye_fills = [(255, 255, 255), (41, 39, 40), (45, 104, 181), (201, 44, 99), (235, 235, 9)]
+        self.bullseye_radius = 90
+        bullseye_radii = [self.bullseye_radius, 70, 50, 30, 10]
+
+        self.bullseye_scene = self.create_bullseye(self.bullseye_scene, bulllseye_fills, bullseye_radii,
+                                                   self.graphics_height)
+
+        view = QGraphicsView(self.bullseye_scene)
         view.show()
         layout_graph.addWidget(view)
         vertical_layout.addLayout(layout_graph)
@@ -262,6 +249,34 @@ class GUI(Game, QMainWindow):
         self.setFixedSize(1000, 500)
         self.initialise_category()
         self.new_phrase()
+
+    def create_bullseye(self,
+                        scene: QGraphicsScene,
+                        fills: List[tuple],
+                        radii: List[int],
+                        graphics_height: int) -> QGraphicsScene:
+
+        for f, r in zip(fills, radii):
+            b = QBrush(QColor(*f))
+            g = QGraphicsEllipseItem((graphics_height/2)-r, (graphics_height/2)-r, 2*r, 2*r)
+            g.setBrush(b)
+            g.setPen(QPen(QColor(0, 0, 0)))
+            scene.addItem(g)
+        return scene
+
+    def plot_on_bullseye(self,
+                         scene: QGraphicsScene,
+                         x: int,
+                         y: int,
+                         graphics_height: int):
+
+        b = QBrush(QColor(255, 255, 255))
+        g = QGraphicsEllipseItem(x+(graphics_height/2), y + (graphics_height/2), 3, 3)
+
+        g.setBrush(b)
+        scene.addItem(g)
+        return g
+
 
     def on_increase_font(self):
 
@@ -447,27 +462,19 @@ class GUI(Game, QMainWindow):
         """
         Updates graphic showing wieghts
         """
-        pass
 
-        # self.graph.axes.clear()
-        # self.graph.axes.plot(range(len(self.weights)), self.weights, color="black")
-        #
-        # graph_config = self.config.params["graph"]
-        # y_positions = graph_config["bar-positions"]
-        # bar_colours = graph_config["bar-colours"]
-        # show_axis = graph_config["show-axis"]
-        #
-        # self.graph.axes.barh(y=y_positions,
-        #                      width=len(self.weights),
-        #                      align="edge",
-        #                      height=2,
-        #                      color=bar_colours)
-        # if not show_axis:
-        #     self.graph.axes.axis("off")
-        # self.graph.draw()
+        # clear old bullseye
 
+        for weight_index in range(len(self.weights)):
+            _coords = self.polar_coordinate_to_cartesian(len(self.weights),
+                                               weight_index,
+                                               self.weights[weight_index],
+                                               10,
+                                               self.bullseye_radius)
+            self.plot_on_bullseye(self.bullseye_scene, _coords[0], _coords[1], self.graphics_height)
 
 if __name__ == "__main__":
+
     config_path = 'config.json'
     phrases_category = "conversational"
     config = Config(config_path)
