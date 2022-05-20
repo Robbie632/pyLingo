@@ -135,7 +135,7 @@ class Game:
     def update_input(self, message: str):
         raise NotImplementedError
 
-    def update_plot(self):
+    def update_graphic(self):
         raise NotImplementedError
 
     def on_peek(self):

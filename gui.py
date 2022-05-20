@@ -3,11 +3,12 @@ from random import choices
 
 import matplotlib
 from PyQt5.QtCore import Qt, QThreadPool
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QBrush, QPen, QColor
 from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
                              QWidget, QHBoxLayout, QVBoxLayout,
-                             QAction, QStatusBar, QMessageBox)
+                             QAction, QStatusBar, QMessageBox, QGraphicsScene,
+                             QGraphicsEllipseItem, QGraphicsView)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
@@ -150,11 +151,35 @@ class GUI(Game, QMainWindow):
         self.set_font_size(self.phrase)
         layout_graph.addWidget(self.phrase)
 
-        self.graph = MplCanvas(self, width=3, height=2, dpi=100)
-        layout_graph.addWidget(self.graph)
+        # self.graph = MplCanvas(self, width=3, height=2, dpi=100)
+        # layout_graph.addWidget(self.graph)
+        # vertical_layout.addLayout(layout_graph)
+        graphics_height = 200
+        scene = QGraphicsScene(0, 0, graphics_height, graphics_height)
+        bulllseye_fills = []
+        bullseye_radii = []
+        bullseye_items = []
+        # loop through above and do below for each circle
+        
+        brush1 = QBrush(QColor(255, 255, 255))
+        brush2 = QBrush(QColor(0, 0, 0))
+        pen_line = QPen(QColor(0, 0, 0))
+        r1 = 125
+        r2 = 100
+        graphic1 = QGraphicsEllipseItem((graphics_height/2)-r1, (graphics_height/2)-r1, 2*r1, 2*r1)
+        graphic2 = QGraphicsEllipseItem((graphics_height/2)-r2, (graphics_height/2)-r2, 2*r2, 2*r2)
+        graphic1.setBrush(brush1)
+        graphic1.setPen(pen_line)
+        graphic2.setPen(pen_line)
+        graphic2.setBrush(brush2)
+        scene.addItem(graphic1)
+        scene.addItem(graphic2)
+        view = QGraphicsView(scene)
+        view.show()
+        layout_graph.addWidget(view)
         vertical_layout.addLayout(layout_graph)
 
-        self.update_plot()
+        self.update_graphic()
 
         self.input_box = InputBox(self)
         self.set_font_size(self.input_box)
@@ -297,7 +322,7 @@ class GUI(Game, QMainWindow):
         load_weights = self.load_weights()
         if not load_weights or len(self.weights) != len(self.syntax):
             self.reset_weights()
-        self.update_plot()
+        self.update_graphic()
         self.new_phrase()
         self.phrase_category_label.setText(f"category: {self.phrases_category}")
 
@@ -319,7 +344,7 @@ class GUI(Game, QMainWindow):
     def on_peek(self):
         self.increase_weight(self.selected_index)
         self.save_weights()
-        self.update_plot()
+        self.update_graphic()
         self.update_feedback(self.language2)
 
     def on_audio(self):
@@ -354,7 +379,7 @@ class GUI(Game, QMainWindow):
         self.update_input("")
         self.increase_weight(self.selected_index)
         self.save_weights()
-        self.update_plot()
+        self.update_graphic()
         self.new_phrase()
         self.update_feedback("")
 
@@ -376,7 +401,7 @@ class GUI(Game, QMainWindow):
 
     def on_reset(self):
         self.reset_weights()
-        self.update_plot()
+        self.update_graphic()
         self.update_popup_text("weights were reset")
         self.popup.exec()
 
@@ -386,7 +411,7 @@ class GUI(Game, QMainWindow):
     def correct(self):
         self.update_feedback("well done, correct")
         self.decrease_weight(self.selected_index)
-        self.update_plot()
+        self.update_graphic()
         self.save_weights()
 
     def incorrect(self):
@@ -395,7 +420,7 @@ class GUI(Game, QMainWindow):
                                                                 self.processed_swedish_with_accents))
             self.increase_weight(self.selected_index)
             self.save_weights()
-            self.update_plot()
+            self.update_graphic()
 
     def check_weights(self, weights: str):
         pass
@@ -417,28 +442,29 @@ class GUI(Game, QMainWindow):
         self.show()
         self.app.exec()
 
-    def update_plot(self):
+    def update_graphic(self):
 
         """
-        Updates graph showing wieghts
+        Updates graphic showing wieghts
         """
+        pass
 
-        self.graph.axes.clear()
-        self.graph.axes.plot(range(len(self.weights)), self.weights, color="black")
-
-        graph_config = self.config.params["graph"]
-        y_positions = graph_config["bar-positions"]
-        bar_colours = graph_config["bar-colours"]
-        show_axis = graph_config["show-axis"]
-
-        self.graph.axes.barh(y=y_positions,
-                             width=len(self.weights),
-                             align="edge",
-                             height=2,
-                             color=bar_colours)
-        if not show_axis:
-            self.graph.axes.axis("off")
-        self.graph.draw()
+        # self.graph.axes.clear()
+        # self.graph.axes.plot(range(len(self.weights)), self.weights, color="black")
+        #
+        # graph_config = self.config.params["graph"]
+        # y_positions = graph_config["bar-positions"]
+        # bar_colours = graph_config["bar-colours"]
+        # show_axis = graph_config["show-axis"]
+        #
+        # self.graph.axes.barh(y=y_positions,
+        #                      width=len(self.weights),
+        #                      align="edge",
+        #                      height=2,
+        #                      color=bar_colours)
+        # if not show_axis:
+        #     self.graph.axes.axis("off")
+        # self.graph.draw()
 
 
 if __name__ == "__main__":
