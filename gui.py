@@ -175,18 +175,21 @@ class GUI(Game, QMainWindow):
 
         self.p = QPushButton(self)
         self.p.setIcon(QIcon('images/peek.png'))
+        self.p.setToolTip("see translation")
         self.p.setFixedSize(control_button_length, control_button_height)
         self.p.clicked.connect(self.on_peek)
         horizontal_layout.addWidget(self.p)
 
         self.s = QPushButton()
         self.s.setIcon(QIcon('images/skip.png'))
+        self.s.setToolTip("skip phrase")
         self.s.setFixedSize(control_button_length, control_button_height)
         self.s.clicked.connect(self.on_skip)
         horizontal_layout.addWidget(self.s)
 
         self.a = QPushButton(self)
         self.a.setIcon(QIcon('images/audio.png'))
+        self.a.setToolTip("listen to phrase")
         self.a.setFixedSize(control_button_length, control_button_height)
         self.a.clicked.connect(self.on_audio)
         horizontal_layout.addWidget(self.a)
