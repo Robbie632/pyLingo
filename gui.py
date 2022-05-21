@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
                              QWidget, QHBoxLayout, QVBoxLayout,
                              QAction, QStatusBar, QMessageBox, QGraphicsScene,
-                             QGraphicsEllipseItem,QGraphicsItem, QGraphicsView)
+                             QGraphicsEllipseItem,QGraphicsItem, QGraphicsView, QGraphicsItemGroup)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
@@ -161,8 +161,6 @@ class GUI(Game, QMainWindow):
         self.bullseye_items = []
         self.bullseye_scene = self.create_bullseye(self.bullseye_scene, bulllseye_fills, bullseye_radii,
                                                    self.graphics_height)
-        self.update_graphic()
-
         view = QGraphicsView(self.bullseye_scene)
         view.show()
         layout_graph.addWidget(view)
@@ -257,35 +255,41 @@ class GUI(Game, QMainWindow):
                         radii: List[int],
                         graphics_height: int) -> QGraphicsScene:
 
+
         for f, r in zip(fills, radii):
             b = QBrush(QColor(*f))
             g = QGraphicsEllipseItem((graphics_height/2)-r, (graphics_height/2)-r, 2*r, 2*r)
             g.setBrush(b)
             g.setPen(QPen(QColor(0, 0, 0)))
             scene.addItem(g)
+
         return scene
 
-    def update_bullseye(self,
-                        coords: List[int],
-                        graphics_height: int):
+    def initialise_bullseye_coords(self,
+                                   scene: QGraphicsScene,
+                                   coords: List[int],
+                                   graphics_height: int):
 
-        for c, i in zip(coords, self.bullseye_items):
-            i.setPos(c[0]+(graphics_height/2), c[1] + (graphics_height/2))
+        for i in self.bullseye_items:
+            self.bullseye_scene.removeItem(i)
 
-
-    def initialise_bullseye(self,
-                            scene: QGraphicsScene,
-                            coords: List[int],
-                            graphics_height: int):
-
+        self.bullseye_items = []
         for c in coords:
 
             b = QBrush(QColor(255, 255, 255))
             g = QGraphicsEllipseItem(c[0]+(graphics_height/2), c[1] + (graphics_height/2), 3, 3)
             g.setBrush(b)
-            scene.addItem(g)
+
             self.bullseye_items.append(g)
-        return g
+            scene.addItem(g)
+
+    def update_bullseye_coords(self,
+                               coords: List[int],
+                               graphics_height: int):
+
+
+        for c, i in zip(coords, self.bullseye_items):
+            i.setPos(c[0], c[1])
 
     def on_increase_font(self):
 
@@ -346,7 +350,7 @@ class GUI(Game, QMainWindow):
         load_weights = self.load_weights()
         if not load_weights or len(self.weights) != len(self.syntax):
             self.reset_weights()
-        self.update_graphic()
+        self.reset_graphic()
         self.new_phrase()
         self.phrase_category_label.setText(f"category: {self.phrases_category}")
 
@@ -425,7 +429,7 @@ class GUI(Game, QMainWindow):
 
     def on_reset(self):
         self.reset_weights()
-        self.update_graphic()
+        self.reset_graphic()
         self.update_popup_text("weights were reset")
         self.popup.exec()
 
@@ -466,24 +470,32 @@ class GUI(Game, QMainWindow):
         self.show()
         self.app.exec()
 
-    def update_graphic(self):
+    def reset_graphic(self):
+        coords = self.get_bullseye_coords()
+        self.initialise_bullseye_coords(self.bullseye_scene, coords, self.graphics_height)
 
-        """
-        Updates graphic showing wieghts
-        """
+
+    def get_bullseye_coords(self):
+
         coords = []
         for weight_index in range(len(self.weights)):
             _coords = self.polar_coordinate_to_cartesian(len(self.weights),
                                                weight_index,
                                                self.weights[weight_index],
                                                10,
+                                               1,
                                                self.bullseye_radius)
             coords.append(_coords)
+        return coords
 
-        if len(self.bullseye_items) != len(self.weights):
-            self.initialise_bullseye(self.bullseye_scene, coords, self.graphics_height)
-        else:
-            self.update_bullseye(coords, self.graphics_height)
+    def update_graphic(self):
+
+        """
+        Updates graphic showing wieghts
+        """
+        coords = self.get_bullseye_coords()
+        self.update_bullseye_coords(coords, self.graphics_height)
+
 
 if __name__ == "__main__":
 
