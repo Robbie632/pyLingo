@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
                              QWidget, QHBoxLayout, QVBoxLayout,
                              QAction, QStatusBar, QMessageBox, QGraphicsScene,
-                             QGraphicsEllipseItem, QGraphicsView)
+                             QGraphicsEllipseItem,QGraphicsItem, QGraphicsView)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
@@ -158,15 +158,16 @@ class GUI(Game, QMainWindow):
         self.bullseye_radius = 90
         bullseye_radii = [self.bullseye_radius, 70, 50, 30, 10]
 
+        self.bullseye_items = []
         self.bullseye_scene = self.create_bullseye(self.bullseye_scene, bulllseye_fills, bullseye_radii,
                                                    self.graphics_height)
+        self.update_graphic()
 
         view = QGraphicsView(self.bullseye_scene)
         view.show()
         layout_graph.addWidget(view)
         vertical_layout.addLayout(layout_graph)
 
-        self.update_graphic()
 
         self.input_box = InputBox(self)
         self.set_font_size(self.input_box)
@@ -264,19 +265,27 @@ class GUI(Game, QMainWindow):
             scene.addItem(g)
         return scene
 
-    def plot_on_bullseye(self,
-                         scene: QGraphicsScene,
-                         x: int,
-                         y: int,
-                         graphics_height: int):
+    def update_bullseye(self,
+                        coords: List[int],
+                        graphics_height: int):
 
-        b = QBrush(QColor(255, 255, 255))
-        g = QGraphicsEllipseItem(x+(graphics_height/2), y + (graphics_height/2), 3, 3)
+        for c, i in zip(coords, self.bullseye_items):
+            i.setPos(c[0]+(graphics_height/2), c[1] + (graphics_height/2))
 
-        g.setBrush(b)
-        scene.addItem(g)
+
+    def initialise_bullseye(self,
+                            scene: QGraphicsScene,
+                            coords: List[int],
+                            graphics_height: int):
+
+        for c in coords:
+
+            b = QBrush(QColor(255, 255, 255))
+            g = QGraphicsEllipseItem(c[0]+(graphics_height/2), c[1] + (graphics_height/2), 3, 3)
+            g.setBrush(b)
+            scene.addItem(g)
+            self.bullseye_items.append(g)
         return g
-
 
     def on_increase_font(self):
 
@@ -462,16 +471,19 @@ class GUI(Game, QMainWindow):
         """
         Updates graphic showing wieghts
         """
-
-        # clear old bullseye
-
+        coords = []
         for weight_index in range(len(self.weights)):
             _coords = self.polar_coordinate_to_cartesian(len(self.weights),
                                                weight_index,
                                                self.weights[weight_index],
                                                10,
                                                self.bullseye_radius)
-            self.plot_on_bullseye(self.bullseye_scene, _coords[0], _coords[1], self.graphics_height)
+            coords.append(_coords)
+
+        if len(self.bullseye_items) != len(self.weights):
+            self.initialise_bullseye(self.bullseye_scene, coords, self.graphics_height)
+        else:
+            self.update_bullseye(coords, self.graphics_height)
 
 if __name__ == "__main__":
 
