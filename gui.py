@@ -266,10 +266,8 @@ class GUI(Game, QMainWindow):
         return scene
 
     def initialise_bullseye_coords(self,
-                                   scene: QGraphicsScene,
                                    coords: List[int],
                                    graphics_height: int):
-
         for i in self.bullseye_items:
             self.bullseye_scene.removeItem(i)
 
@@ -277,19 +275,23 @@ class GUI(Game, QMainWindow):
         for c in coords:
 
             b = QBrush(QColor(255, 255, 255))
+            #problem I think the position isnt ser properly here, look at the constructor documentation
             g = QGraphicsEllipseItem(c[0]+(graphics_height/2), c[1] + (graphics_height/2), 3, 3)
+
             g.setBrush(b)
 
             self.bullseye_items.append(g)
-            scene.addItem(g)
-
+            self.bullseye_scene.addItem(g)
+            print(g.scenePos())
+        print("\n")
     def update_bullseye_coords(self,
-                               coords: List[int],
-                               graphics_height: int):
+                               coords: List[int]
+                               ):
 
-
-        for c, i in zip(coords, self.bullseye_items):
-            i.setPos(c[0], c[1])
+        for c, item in zip(coords, self.bullseye_items):
+            item.setPos(c[0], c[1])
+            print(item.scenePos())
+        print("\n")
 
     def on_increase_font(self):
 
@@ -472,8 +474,15 @@ class GUI(Game, QMainWindow):
 
     def reset_graphic(self):
         coords = self.get_bullseye_coords()
-        self.initialise_bullseye_coords(self.bullseye_scene, coords, self.graphics_height)
+        self.initialise_bullseye_coords(coords, self.graphics_height)
 
+    def update_graphic(self):
+
+        """
+        Updates graphic showing wieghts
+        """
+        coords = self.get_bullseye_coords()
+        self.update_bullseye_coords(coords)
 
     def get_bullseye_coords(self):
 
@@ -487,14 +496,6 @@ class GUI(Game, QMainWindow):
                                                self.bullseye_radius)
             coords.append(_coords)
         return coords
-
-    def update_graphic(self):
-
-        """
-        Updates graphic showing wieghts
-        """
-        coords = self.get_bullseye_coords()
-        self.update_bullseye_coords(coords, self.graphics_height)
 
 
 if __name__ == "__main__":
