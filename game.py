@@ -84,12 +84,14 @@ class Game:
                                       max_score: int,
                                       min_score: int,
                                       circle_radius: int) -> List[int]:
+
         score = score - min_score
         theta = (phrase_index/total_phrases)*2*np.pi
         scale_ratio = circle_radius/max_score
 
         x = int(scale_ratio * score * np.cos(theta))
         y = int(scale_ratio * score * np.sin(theta))
+
 
         return [x, y]
 

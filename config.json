@@ -1,13 +1,5 @@
 {
     "reward": 0.4,
-    "phrase-categories": [
-        "conversational",
-        "tutoring",
-        "times",
-        "cafe",
-        "restaurant",
-        "prepositions"
-    ],
     "accents-lookup": {
         "\u00e5": "a",
         "\u00e4": "a",
@@ -47,5 +39,13 @@
             7
         ],
         "show-axis": true
-    }
+    },
+    "phrase-categories": [
+        "tutoring",
+        "times",
+        "prepositions",
+        "conversational",
+        "cafe",
+        "restaurant"
+    ]
 }

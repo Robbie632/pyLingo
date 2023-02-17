@@ -18,7 +18,7 @@
         ],
         [
             "We did some DIY",
-            "Vi gjorde lite g\u00e5r-det-sj\u00e4lv-arbete"
+            "Vi gjorde lite gär-det-sj\u00e4lv-arbete"
         ],
         [
             "How was your coffee",
@@ -279,6 +279,25 @@
         [
             "I hope you slept well",
             "Jag hoppas du sov gott"
+        ],
+        [
+            "I slept well thanks but not long enough",
+            "Jag sov bra tack men inte tillräckligt länge"
+        ],
+        ["A view",
+         "en utsikt"
+        ],
+        [
+            "There is no coffe",
+            "Finns det inget kaffe"
+        ],
+        [
+            "How many meatballs would you like?",
+            "Hur många köttbullar skulle du vilja"
+        ],
+        [
+            "Shall we meet by this caffe",
+            "ska vi träffas vid caféet"
         ]
     ]
 }

@@ -9,84 +9,21 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QWidget, QHBoxLayout, QVBoxLayout,
                              QAction, QStatusBar, QMessageBox, QGraphicsScene,
                              QGraphicsEllipseItem,QGraphicsItem, QGraphicsView, QGraphicsItemGroup)
+
+from add_content.add_phrases import AddPhraseWindow
+from add_content.add_category import AddCategoryWindow
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 from config import Config
 from game import Game
-from threads import Worker#
-import json
+from threads import Worker
 
 matplotlib.use('Qt5Agg')
 
-class AddPhraseWindow(QWidget):
-    """
-    Window for adding new phrase
-    """
-    def __init__(self, main_window, category):
-        super().__init__()
-        self.main_window = main_window
-        self.category = category
-        layout = QVBoxLayout()
-        info = QLabel("Add a new line for each phrase, seperate lines with *")
-        self.setWindowTitle("pyLingo-phrase addition")
-        self.input_box_1 = QTextEdit()
-        self.input_box_2 = QTextEdit()
-        self.input_box_1.setFixedSize(600, 200)
-        self.input_box_2.setFixedSize(600, 200)
 
-        self.submit = QPushButton(self)
-        self.submit.setText("submit")
-        self.submit.setFixedSize(100, 30)
-        self.submit.clicked.connect(self.on_submit)
 
-        self.text1 = QLabel("known phrase(s)")
-        self.text2 = QLabel("new language phrase(s)")
-        layout.addWidget(info)
-        layout.addWidget(self.text1)
-        layout.addWidget(self.input_box_1)
-        layout.addSpacing(50)
-        layout.addWidget(self.text2)
-        layout.addWidget(self.input_box_2)
-        layout.addSpacing(25)
-        layout.addWidget(self.submit)
-        self.setFixedSize(800, 800)
-        self.setLayout(layout)
 
-    def on_submit(self) -> None:
-
-        feedback = QMessageBox()
-
-        syntax = self.load_phrases(self.category)
-        mother_tongue_phrases = self.input_box_1.toPlainText().split("*")
-        new_language_phrases = self.input_box_2.toPlainText().split("*")
-
-        if len(mother_tongue_phrases) != len(new_language_phrases):
-            feedback.setText("please enter the same number of phrases in each box")
-        elif mother_tongue_phrases[0] == "" and len(mother_tongue_phrases) == 1:
-            feedback.setText("Please enter some text before submitting")
-        else:
-            for mt, nl in zip(mother_tongue_phrases, new_language_phrases):
-                syntax["syntax"].append([self.main_window.preprocess(mt), self.main_window.preprocess(nl)])
-            self.write_phrases(self.category, syntax)
-            self.input_box_1.clear()
-            self.input_box_2.clear()
-            feedback.setText(f"you have added a phrase pair to category: {self.category}")
-
-        feedback.exec()
-
-    def load_phrases(self, category: str) -> dict:
-        path = os.path.join("assets", category, "phrases.json")
-
-        with open(path, "r") as f:
-            syntax = json.load(f)
-        return syntax
-
-    def write_phrases(self, category: str, syntax: dict) -> list:
-        path = os.path.join("assets", category, "phrases.json")
-
-        with open(path, "w") as f:
-            json.dump(syntax, f, indent=4)
 
 
 class InputBox(QTextEdit):
@@ -223,11 +160,13 @@ class GUI(Game, QMainWindow):
         font2 = QAction("Font: -", self)
         reset_weights = QAction("Reset weights", self)
         add_phrases = QAction("Add phrase(s)", self)
+        add_category = QAction("Add Category", self)
 
         font1.triggered.connect(self.on_increase_font)
         font2.triggered.connect(self.on_decrease_font)
         reset_weights.triggered.connect(self.on_reset)
         add_phrases.triggered.connect(self.on_add_phrase)
+        add_category.triggered.connect(self.on_add_category)
 
         settings_menu.addAction(font1)
         settings_menu.addSeparator()
@@ -236,6 +175,8 @@ class GUI(Game, QMainWindow):
         settings_menu.addAction(reset_weights)
         settings_menu.addSeparator()
         add_phrase = settings_menu.addMenu("Add phrase")
+        settings_menu.addSeparator()
+        settings_menu.addAction(add_category)
 
         for category in self.config.params["phrase-categories"]:
             action = QAction(category, self)
@@ -248,6 +189,26 @@ class GUI(Game, QMainWindow):
         self.setFixedSize(1000, 500)
         self.initialise_category()
         self.new_phrase()
+        self.key_press_num =0
+
+    def reset_config(self):
+        print("implement resetting of config and call when user adds new category so ne content is immediately available")
+
+    def keyPressEvent(self, event):
+        # if event.key() == Qt.Key_Space:
+        #     self.test_method()
+        if event.key() == 80:
+          self.test_method()
+          
+
+    def test_method(self):
+      w = QWidget()
+
+      screen = QApplication.primaryScreen()
+      screenshot = screen.grabWindow( self.winId() )
+      screenshot.save(f"{self.key_press_num}_screenshot.png", "png")
+      self.key_press_num += 1
+      w.close()
 
     def create_bullseye(self,
                         scene: QGraphicsScene,
@@ -275,23 +236,21 @@ class GUI(Game, QMainWindow):
         for c in coords:
 
             b = QBrush(QColor(255, 255, 255))
-            #problem I think the position isnt ser properly here, look at the constructor documentation
-            g = QGraphicsEllipseItem(c[0]+(graphics_height/2), c[1] + (graphics_height/2), 3, 3)
+
+            g = QGraphicsEllipseItem(c[0]+(graphics_height/2)-2.5, c[1] + (graphics_height/2)-2.5, 5, 5)
 
             g.setBrush(b)
 
             self.bullseye_items.append(g)
             self.bullseye_scene.addItem(g)
-            print(g.scenePos())
-        print("\n")
+
     def update_bullseye_coords(self,
                                coords: List[int]
                                ):
 
         for c, item in zip(coords, self.bullseye_items):
             item.setPos(c[0], c[1])
-            print(item.scenePos())
-        print("\n")
+
 
     def on_increase_font(self):
 
@@ -327,6 +286,13 @@ class GUI(Game, QMainWindow):
         # add phrases to list then add to self.syntax then write self.syntax to file
         self.new_phrase_window = AddPhraseWindow(self, selected_category)
         self.new_phrase_window.show()
+
+    def on_add_category(self):
+        # create new window
+        # ask for category name
+        # create button called create category
+        self.new_category_window = AddCategoryWindow(self)
+        self.new_category_window.show()
 
     def set_font_size(self, widget):
 
@@ -439,7 +405,7 @@ class GUI(Game, QMainWindow):
         pass
 
     def correct(self):
-        self.update_feedback("well done, correct")
+        self.update_feedback(f"well done, {self.phrase.text()}: {self.processed_swedish_with_accents}")
         self.decrease_weight(self.selected_index)
         self.update_graphic()
         self.save_weights()
