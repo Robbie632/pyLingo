@@ -1,91 +1,29 @@
 import os
 from random import choices
-
+from typing import List, Tuple
 import matplotlib
 from PyQt5.QtCore import Qt, QThreadPool
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QBrush, QPen, QColor
 from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
                              QWidget, QHBoxLayout, QVBoxLayout,
-                             QAction, QStatusBar, QMessageBox)
+                             QAction, QStatusBar, QMessageBox, QGraphicsScene,
+                             QGraphicsEllipseItem,QGraphicsItem, QGraphicsView, QGraphicsItemGroup)
+
+from add_content.add_phrases import AddPhraseWindow
+from add_content.add_category import AddCategoryWindow
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 from config import Config
 from game import Game
-from threads import Worker#
-import json
+from threads import Worker
 
 matplotlib.use('Qt5Agg')
 
-class AddPhraseWindow(QWidget):
-    """
-    Window for adding new phrase
-    """
-    def __init__(self, main_window, category):
-        super().__init__()
-        self.main_window = main_window
-        self.category = category
-        layout = QVBoxLayout()
-        info = QLabel("Add a new line for each phrase, seperate lines with *")
-        self.setWindowTitle("pyLingo-phrase addition")
-        self.input_box_1 = QTextEdit()
-        self.input_box_2 = QTextEdit()
-        self.input_box_1.setFixedSize(600, 200)
-        self.input_box_2.setFixedSize(600, 200)
 
-        self.submit = QPushButton(self)
-        self.submit.setText("submit")
-        self.submit.setFixedSize(100, 30)
-        self.submit.clicked.connect(self.on_submit)
 
-        self.text1 = QLabel("known phrase(s)")
-        self.text2 = QLabel("new language phrase(s)")
-        layout.addWidget(info)
-        layout.addWidget(self.text1)
-        layout.addWidget(self.input_box_1)
-        layout.addSpacing(50)
-        layout.addWidget(self.text2)
-        layout.addWidget(self.input_box_2)
-        layout.addSpacing(25)
-        layout.addWidget(self.submit)
-        self.setFixedSize(800, 800)
-        self.setLayout(layout)
 
-    def on_submit(self) -> None:
-
-        feedback = QMessageBox()
-
-        syntax = self.load_phrases(self.category)
-        mother_tongue_phrases = self.input_box_1.toPlainText().split("*")
-        new_language_phrases = self.input_box_2.toPlainText().split("*")
-
-        if len(mother_tongue_phrases) != len(new_language_phrases):
-            feedback.setText("please enter the same number of phrases in each box")
-        elif mother_tongue_phrases[0] == "" and len(mother_tongue_phrases) == 1:
-            feedback.setText("Please enter some text before submitting")
-        else:
-            for mt, nl in zip(mother_tongue_phrases, new_language_phrases):
-                syntax["syntax"].append([self.main_window.preprocess(mt), self.main_window.preprocess(nl)])
-            self.write_phrases(self.category, syntax)
-            self.input_box_1.clear()
-            self.input_box_2.clear()
-            feedback.setText(f"you have added a phrase pair to category: {self.category}")
-
-        feedback.exec()
-
-    def load_phrases(self, category: str) -> dict:
-        path = os.path.join("assets", category, "phrases.json")
-
-        with open(path, "r") as f:
-            syntax = json.load(f)
-        return syntax
-
-    def write_phrases(self, category: str, syntax: dict) -> list:
-        path = os.path.join("assets", category, "phrases.json")
-
-        with open(path, "w") as f:
-            json.dump(syntax, f, indent=4)
 
 
 class InputBox(QTextEdit):
@@ -150,11 +88,21 @@ class GUI(Game, QMainWindow):
         self.set_font_size(self.phrase)
         layout_graph.addWidget(self.phrase)
 
-        self.graph = MplCanvas(self, width=3, height=2, dpi=100)
-        layout_graph.addWidget(self.graph)
+        self.graphics_height = 200
+        self.bullseye_scene = QGraphicsScene(0, 0, self.graphics_height, self.graphics_height)
+
+        bulllseye_fills = [(255, 255, 255), (41, 39, 40), (45, 104, 181), (201, 44, 99), (235, 235, 9)]
+        self.bullseye_radius = 90
+        bullseye_radii = [self.bullseye_radius, 70, 50, 30, 10]
+
+        self.bullseye_items = []
+        self.bullseye_scene = self.create_bullseye(self.bullseye_scene, bulllseye_fills, bullseye_radii,
+                                                   self.graphics_height)
+        view = QGraphicsView(self.bullseye_scene)
+        view.show()
+        layout_graph.addWidget(view)
         vertical_layout.addLayout(layout_graph)
 
-        self.update_plot()
 
         self.input_box = InputBox(self)
         self.set_font_size(self.input_box)
@@ -212,11 +160,13 @@ class GUI(Game, QMainWindow):
         font2 = QAction("Font: -", self)
         reset_weights = QAction("Reset weights", self)
         add_phrases = QAction("Add phrase(s)", self)
+        add_category = QAction("Add Category", self)
 
         font1.triggered.connect(self.on_increase_font)
         font2.triggered.connect(self.on_decrease_font)
         reset_weights.triggered.connect(self.on_reset)
         add_phrases.triggered.connect(self.on_add_phrase)
+        add_category.triggered.connect(self.on_add_category)
 
         settings_menu.addAction(font1)
         settings_menu.addSeparator()
@@ -225,6 +175,8 @@ class GUI(Game, QMainWindow):
         settings_menu.addAction(reset_weights)
         settings_menu.addSeparator()
         add_phrase = settings_menu.addMenu("Add phrase")
+        settings_menu.addSeparator()
+        settings_menu.addAction(add_category)
 
         for category in self.config.params["phrase-categories"]:
             action = QAction(category, self)
@@ -237,6 +189,68 @@ class GUI(Game, QMainWindow):
         self.setFixedSize(1000, 500)
         self.initialise_category()
         self.new_phrase()
+        self.key_press_num =0
+
+    def reset_config(self):
+        print("implement resetting of config and call when user adds new category so ne content is immediately available")
+
+    def keyPressEvent(self, event):
+        # if event.key() == Qt.Key_Space:
+        #     self.test_method()
+        if event.key() == 80:
+          self.test_method()
+          
+
+    def test_method(self):
+      w = QWidget()
+
+      screen = QApplication.primaryScreen()
+      screenshot = screen.grabWindow( self.winId() )
+      screenshot.save(f"{self.key_press_num}_screenshot.png", "png")
+      self.key_press_num += 1
+      w.close()
+
+    def create_bullseye(self,
+                        scene: QGraphicsScene,
+                        fills: List[tuple],
+                        radii: List[int],
+                        graphics_height: int) -> QGraphicsScene:
+
+
+        for f, r in zip(fills, radii):
+            b = QBrush(QColor(*f))
+            g = QGraphicsEllipseItem((graphics_height/2)-r, (graphics_height/2)-r, 2*r, 2*r)
+            g.setBrush(b)
+            g.setPen(QPen(QColor(0, 0, 0)))
+            scene.addItem(g)
+
+        return scene
+
+    def initialise_bullseye_coords(self,
+                                   coords: List[int],
+                                   graphics_height: int):
+        for i in self.bullseye_items:
+            self.bullseye_scene.removeItem(i)
+
+        self.bullseye_items = []
+        for c in coords:
+
+            b = QBrush(QColor(255, 255, 255))
+
+            g = QGraphicsEllipseItem(c[0]+(graphics_height/2)-2.5, c[1] + (graphics_height/2)-2.5, 5, 5)
+
+            g.setBrush(b)
+
+            self.bullseye_items.append(g)
+            self.bullseye_scene.addItem(g)
+
+    def update_bullseye_coords(self,
+                               coords: List[int]
+                               ):
+
+        for c, item in zip(coords, self.bullseye_items):
+            item.setPos(c[0], c[1])
+
 
     def on_increase_font(self):
 
@@ -273,6 +287,13 @@ class GUI(Game, QMainWindow):
         self.new_phrase_window = AddPhraseWindow(self, selected_category)
         self.new_phrase_window.show()
 
+    def on_add_category(self):
+        # create new window
+        # ask for category name
+        # create button called create category
+        self.new_category_window = AddCategoryWindow(self)
+        self.new_category_window.show()
+
     def set_font_size(self, widget):
 
         """
@@ -297,7 +318,7 @@ class GUI(Game, QMainWindow):
         load_weights = self.load_weights()
         if not load_weights or len(self.weights) != len(self.syntax):
             self.reset_weights()
-        self.update_plot()
+        self.reset_graphic()
         self.new_phrase()
         self.phrase_category_label.setText(f"category: {self.phrases_category}")
 
@@ -319,7 +340,7 @@ class GUI(Game, QMainWindow):
     def on_peek(self):
         self.increase_weight(self.selected_index)
         self.save_weights()
-        self.update_plot()
+        self.update_graphic()
         self.update_feedback(self.language2)
 
     def on_audio(self):
@@ -354,7 +375,7 @@ class GUI(Game, QMainWindow):
         self.update_input("")
         self.increase_weight(self.selected_index)
         self.save_weights()
-        self.update_plot()
+        self.update_graphic()
         self.new_phrase()
         self.update_feedback("")
 
@@ -376,7 +397,7 @@ class GUI(Game, QMainWindow):
 
     def on_reset(self):
         self.reset_weights()
-        self.update_plot()
+        self.reset_graphic()
         self.update_popup_text("weights were reset")
         self.popup.exec()
 
@@ -384,9 +405,9 @@ class GUI(Game, QMainWindow):
         pass
 
     def correct(self):
-        self.update_feedback("well done, correct")
+        self.update_feedback(f"well done, {self.phrase.text()}: {self.processed_swedish_with_accents}")
         self.decrease_weight(self.selected_index)
-        self.update_plot()
+        self.update_graphic()
         self.save_weights()
 
     def incorrect(self):
@@ -395,7 +416,7 @@ class GUI(Game, QMainWindow):
                                                                 self.processed_swedish_with_accents))
             self.increase_weight(self.selected_index)
             self.save_weights()
-            self.update_plot()
+            self.update_graphic()
 
     def check_weights(self, weights: str):
         pass
@@ -417,31 +438,34 @@ class GUI(Game, QMainWindow):
         self.show()
         self.app.exec()
 
-    def update_plot(self):
+    def reset_graphic(self):
+        coords = self.get_bullseye_coords()
+        self.initialise_bullseye_coords(coords, self.graphics_height)
+
+    def update_graphic(self):
 
         """
-        Updates graph showing wieghts
+        Updates graphic showing wieghts
         """
+        coords = self.get_bullseye_coords()
+        self.update_bullseye_coords(coords)
 
-        self.graph.axes.clear()
-        self.graph.axes.plot(range(len(self.weights)), self.weights, color="black")
+    def get_bullseye_coords(self):
 
-        graph_config = self.config.params["graph"]
-        y_positions = graph_config["bar-positions"]
-        bar_colours = graph_config["bar-colours"]
-        show_axis = graph_config["show-axis"]
-
-        self.graph.axes.barh(y=y_positions,
-                             width=len(self.weights),
-                             align="edge",
-                             height=2,
-                             color=bar_colours)
-        if not show_axis:
-            self.graph.axes.axis("off")
-        self.graph.draw()
+        coords = []
+        for weight_index in range(len(self.weights)):
+            _coords = self.polar_coordinate_to_cartesian(len(self.weights),
+                                               weight_index,
+                                               self.weights[weight_index],
+                                               10,
+                                               1,
+                                               self.bullseye_radius)
+            coords.append(_coords)
+        return coords
 
 
 if __name__ == "__main__":
+
     config_path = 'config.json'
     phrases_category = "conversational"
     config = Config(config_path)

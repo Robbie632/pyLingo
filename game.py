@@ -6,6 +6,8 @@ from playsound import playsound, PlaysoundException
 import string
 import gtts
 from gtts.tts import gTTSError
+from typing import List
+import numpy as np
 
 
 class Game:
@@ -75,6 +77,24 @@ class Game:
         out = " ".join(out)
         return out
 
+    def polar_coordinate_to_cartesian(self,
+                                      total_phrases: int,
+                                      phrase_index: int,
+                                      score: float,
+                                      max_score: int,
+                                      min_score: int,
+                                      circle_radius: int) -> List[int]:
+
+        score = score - min_score
+        theta = (phrase_index/total_phrases)*2*np.pi
+        scale_ratio = circle_radius/max_score
+
+        x = int(scale_ratio * score * np.cos(theta))
+        y = int(scale_ratio * score * np.sin(theta))
+
+
+        return [x, y]
+
     def load_weights(self):
         """
         Loads the weights from json file
@@ -135,7 +155,7 @@ class Game:
     def update_input(self, message: str):
         raise NotImplementedError
 
-    def update_plot(self):
+    def update_graphic(self):
         raise NotImplementedError
 
     def on_peek(self):
