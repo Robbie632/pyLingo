@@ -23,6 +23,11 @@ then run tool in terminal:
 python gui.py
 ```
 ---
+
+Alternatively you could install the pip packages in the rquirements.txt file into a conda environment then install the conda package python3-pyqt5
+
+---
+
 ### Adding new phrases
 
 Say you want to add a set of phrases for the new category "pets", you would do the following:

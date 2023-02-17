@@ -328,7 +328,10 @@ class GUI(Game, QMainWindow):
     def decrease_weight(self, index: int):
         self.weights[index] = max(1, self.weights[index] - self.reward)
 
-    def update_feedback(self, message: str):
+    def update_feedback(self, message: str, bold: bool = False):
+        self.feedback.setTextFormat(Qt.RichText)
+        if bold:
+            message = f"<b>{message}</b>"
         self.feedback.setText(message)
 
     def update_phrase(self, message: str):
@@ -405,7 +408,7 @@ class GUI(Game, QMainWindow):
         pass
 
     def correct(self):
-        self.update_feedback(f"well done, {self.phrase.text()}: {self.processed_swedish_with_accents}")
+        self.update_feedback(f"{self.phrase.text()}: {self.processed_swedish_with_accents}", bold=True)
         self.decrease_weight(self.selected_index)
         self.update_graphic()
         self.save_weights()
