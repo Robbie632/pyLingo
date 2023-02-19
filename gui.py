@@ -1,6 +1,6 @@
 import os
-from random import choices
-from typing import List, Tuple
+from abc import ABC
+from typing import List
 import matplotlib
 from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtGui import QFont, QIcon, QBrush, QPen, QColor
@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow,
                              QLabel, QTextEdit, QPushButton,
                              QWidget, QHBoxLayout, QVBoxLayout,
                              QAction, QStatusBar, QMessageBox, QGraphicsScene,
-                             QGraphicsEllipseItem,QGraphicsItem, QGraphicsView, QGraphicsItemGroup)
+                             QGraphicsEllipseItem, QGraphicsView, )
 
 from add_content.add_phrases import AddPhraseWindow
 from add_content.add_category import AddCategoryWindow
@@ -22,12 +22,10 @@ from threads import Worker
 matplotlib.use('Qt5Agg')
 
 
-
-
-
-
 class InputBox(QTextEdit):
-
+    """
+    class conteolling the input box
+    """
     def __init__(self, s):
         QTextEdit.__init__(self, s)
         # self.s must already be present as an attribute in QTextEit so
@@ -35,9 +33,17 @@ class InputBox(QTextEdit):
         self.s = s
 
     def keyPressEvent(self, keyEvent):
+        """
+        Method executed when key pressed
+        Parameters
+        ----------
+        keyEvent
+
+        """
         super(InputBox, self).keyPressEvent(keyEvent)
         if keyEvent.key() == Qt.Key_Return:
             self.s.on_submit()
+
 
 class MplCanvas(FigureCanvasQTAgg):
 
@@ -103,16 +109,13 @@ class GUI(Game, QMainWindow):
         layout_graph.addWidget(view)
         vertical_layout.addLayout(layout_graph)
 
-
+        self.feedback = QLabel(self)
+        self.feedback.setText("")
+        vertical_layout.addWidget(self.feedback)
         self.input_box = InputBox(self)
         self.set_font_size(self.input_box)
         self.input_box.setFixedSize(500, 50)
         vertical_layout.addWidget(self.input_box)
-
-        self.feedback = QLabel(self)
-        self.feedback.setText("")
-        vertical_layout.addWidget(self.feedback)
-
         self.submit = QPushButton(self)
         self.submit.setText("submit")
         self.submit.setFixedSize(control_button_length, control_button_height)
@@ -189,37 +192,48 @@ class GUI(Game, QMainWindow):
         self.setFixedSize(1000, 500)
         self.initialise_category()
         self.new_phrase()
-        self.key_press_num =0
+        self.key_press_num = 0
 
     def reset_config(self):
-        print("implement resetting of config and call when user adds new category so ne content is immediately available")
+        print(
+            "implement resetting of config and call when user adds new category so ne content is immediately available")
 
     def keyPressEvent(self, event):
         # if event.key() == Qt.Key_Space:
         #     self.test_method()
         if event.key() == 80:
-          self.test_method()
-          
+            self.test_method()
 
     def test_method(self):
-      w = QWidget()
+        w = QWidget()
 
-      screen = QApplication.primaryScreen()
-      screenshot = screen.grabWindow( self.winId() )
-      screenshot.save(f"{self.key_press_num}_screenshot.png", "png")
-      self.key_press_num += 1
-      w.close()
+        screen = QApplication.primaryScreen()
+        screenshot = screen.grabWindow(self.winId())
+        screenshot.save(f"{self.key_press_num}_screenshot.png", "png")
+        self.key_press_num += 1
+        w.close()
 
-    def create_bullseye(self,
-                        scene: QGraphicsScene,
+    @staticmethod
+    def create_bullseye(scene: QGraphicsScene,
                         fills: List[tuple],
                         radii: List[int],
                         graphics_height: int) -> QGraphicsScene:
+        """
+        Create bullseye graphic
+        Parameters
+        ----------
+        scene: graphics scene
+        fills: list of tuples of length 3 with colour values for consentric rings of bullseye
+        radii: list of radii for concentric ring sof bullseye
+        graphics_height: height of the graphic
 
+        Returns
+        -------
 
+        """
         for f, r in zip(fills, radii):
             b = QBrush(QColor(*f))
-            g = QGraphicsEllipseItem((graphics_height/2)-r, (graphics_height/2)-r, 2*r, 2*r)
+            g = QGraphicsEllipseItem((graphics_height / 2) - r, (graphics_height / 2) - r, 2 * r, 2 * r)
             g.setBrush(b)
             g.setPen(QPen(QColor(0, 0, 0)))
             scene.addItem(g)
@@ -227,17 +241,23 @@ class GUI(Game, QMainWindow):
         return scene
 
     def initialise_bullseye_coords(self,
-                                   coords: List[int],
+                                   coords: List[List[int]],
                                    graphics_height: int):
+        """
+        Initialise the pointson the bullseye graphic
+        Parameters
+        ----------
+        coords: list of corrdinates of points
+        graphics_height: height of graphic
+        """
         for i in self.bullseye_items:
             self.bullseye_scene.removeItem(i)
 
         self.bullseye_items = []
         for c in coords:
-
             b = QBrush(QColor(255, 255, 255))
 
-            g = QGraphicsEllipseItem(c[0]+(graphics_height/2)-2.5, c[1] + (graphics_height/2)-2.5, 5, 5)
+            g = QGraphicsEllipseItem(c[0] + (graphics_height / 2) - 2.5, c[1] + (graphics_height / 2) - 2.5, 5, 5)
 
             g.setBrush(b)
 
@@ -245,15 +265,21 @@ class GUI(Game, QMainWindow):
             self.bullseye_scene.addItem(g)
 
     def update_bullseye_coords(self,
-                               coords: List[int]
+                               coords: List[List[int]]
                                ):
-
+        """
+        Updates point son bullseye graphic
+        Parameters
+        ----------
+        coordsL list of new coordinates
+        """
         for c, item in zip(coords, self.bullseye_items):
             item.setPos(c[0], c[1])
 
-
     def on_increase_font(self):
-
+        """
+        Increases text font of app
+        """
         new_size = self.config.params["aesthetics"]["font-size"] + 1
         self.config.params["aesthetics"]["font-size"] = new_size
         self.config.write_to_file()
@@ -262,9 +288,20 @@ class GUI(Game, QMainWindow):
         self.set_font_size(self.feedback)
 
     def update_popup_text(self, message: str):
+        """
+        pdates text on current pop up window
+        Parameters
+        ----------
+        message: message to be shown
+        """
         self.popup.setText(message)
 
     def on_decrease_font(self):
+        """
+        Decreases text font size of app
+        -------
+
+        """
         new_size = self.config.params["aesthetics"]["font-size"] - 1
         self.config.params["aesthetics"]["font-size"] = new_size
         self.config.write_to_file()
@@ -273,12 +310,18 @@ class GUI(Game, QMainWindow):
         self.set_font_size(self.feedback)
 
     def on_category_selection(self):
+        """
+        Method executed when category selected
+        """
         self.phrases_category = self.sender().text()
         self.initialise_category()
         self.update_popup_text(f"changed category to: {str(self.phrases_category)}")
         self.popup.exec()
 
     def on_add_phrase(self):
+        """
+        Method executed when phrase added
+        """
         print("on_add_phrase()")
         selected_category = self.sender().text()
 
@@ -288,9 +331,10 @@ class GUI(Game, QMainWindow):
         self.new_phrase_window.show()
 
     def on_add_category(self):
-        # create new window
-        # ask for category name
-        # create button called create category
+        """
+        Method executed when new category added,
+        """
+
         self.new_category_window = AddCategoryWindow(self)
         self.new_category_window.show()
 
@@ -307,7 +351,6 @@ class GUI(Game, QMainWindow):
         except AttributeError as e:
             print(f"couldnt set font type for {str(widget)}")
 
-
     def initialise_category(self):
         """
         loads phrases and weights,
@@ -323,21 +366,67 @@ class GUI(Game, QMainWindow):
         self.phrase_category_label.setText(f"category: {self.phrases_category}")
 
     def increase_weight(self, index: int):
+        """
+        Increase weight of specific phrase
+        Parameters
+        ----------
+        index; index of phrase
+        """
         self.weights[index] += self.reward
 
     def decrease_weight(self, index: int):
+        """
+        Decrease weight of specific phrase
+        Parameters
+        ----------
+        index; index of phrase
+        """
         self.weights[index] = max(1, self.weights[index] - self.reward)
 
-    def update_feedback(self, message: str):
+    def update_feedback(self, message: str, bold: bool = False, color: str="black"):
+        """
+        Updates text in feedback
+        Parameters
+        ----------
+        message: message to display
+        bold: whether the message should be bold or not
+        color: color of text
+        """
+        self.feedback.setTextFormat(Qt.RichText)
+        if color not in ["green", "red", "black"]:
+            raise ValueError(f"trying to set text to unavailable color {color}")
+        color_string = f"style=color:{color};"
+        if bold:
+            tag_name = "b"
+        else:
+            tag_name = "a"
+        message = f"<{tag_name} {color_string}>{message}</{tag_name}>"
         self.feedback.setText(message)
 
+
+
     def update_phrase(self, message: str):
+        """
+        Updates phrase being tested
+        Parameters
+        ----------
+        message: text to display
+        """
         self.phrase.setText(message)
 
     def update_input(self, message: str):
+        """
+        Updates input box with text
+        Parameters
+        ----------
+        message: text to display in input box
+        """
         self.input_box.setText(message)
 
     def on_peek(self):
+        """
+        Method executed when user clicks peek button
+        """
         self.increase_weight(self.selected_index)
         self.save_weights()
         self.update_graphic()
@@ -372,6 +461,9 @@ class GUI(Game, QMainWindow):
             return None
 
     def on_skip(self):
+        """
+        Method executed when user skips phrase being tested
+        """
         self.update_input("")
         self.increase_weight(self.selected_index)
         self.save_weights()
@@ -380,6 +472,9 @@ class GUI(Game, QMainWindow):
         self.update_feedback("")
 
     def on_submit(self):
+        """
+        Method executed when user submits answer in input box
+        """
         answer = self.input_box.toPlainText()
         self.input_box.setText("")
         self.processed_answer = self.preprocess(answer)
@@ -405,7 +500,7 @@ class GUI(Game, QMainWindow):
         pass
 
     def correct(self):
-        self.update_feedback(f"well done, {self.phrase.text()}: {self.processed_swedish_with_accents}")
+        self.update_feedback(f"{self.phrase.text()}: {self.processed_swedish_with_accents}", bold=True, color="green")
         self.decrease_weight(self.selected_index)
         self.update_graphic()
         self.save_weights()
@@ -413,7 +508,7 @@ class GUI(Game, QMainWindow):
     def incorrect(self):
         if self.processed_answer is not None and self.processed_swedish_with_accents is not None:
             self.update_feedback(self.uppercase_incorrect_words(self.processed_answer,
-                                                                self.processed_swedish_with_accents))
+                                                                self.processed_swedish_with_accents), color="red")
             self.increase_weight(self.selected_index)
             self.save_weights()
             self.update_graphic()
@@ -455,17 +550,16 @@ class GUI(Game, QMainWindow):
         coords = []
         for weight_index in range(len(self.weights)):
             _coords = self.polar_coordinate_to_cartesian(len(self.weights),
-                                               weight_index,
-                                               self.weights[weight_index],
-                                               10,
-                                               1,
-                                               self.bullseye_radius)
+                                                         weight_index,
+                                                         self.weights[weight_index],
+                                                         10,
+                                                         1,
+                                                         self.bullseye_radius)
             coords.append(_coords)
         return coords
 
 
 if __name__ == "__main__":
-
     config_path = 'config.json'
     phrases_category = "conversational"
     config = Config(config_path)

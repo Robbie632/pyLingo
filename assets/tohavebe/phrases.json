@@ -1,0 +1,52 @@
+{
+    "syntax": [
+        [
+            "i have an apple",
+            "jag har ett apple"
+        ],
+        [
+            "i have had an apple",
+            "jag har haft ett apple"
+        ],
+        [
+            "i had an apple",
+            "jag hade ett apple"
+        ],
+        [
+            "i will have an apple",
+            "jag ska ha ett apple"
+        ],
+        [
+            "i am going to have an apple",
+            "jag kommer att ha ett apple"
+        ],
+        [
+            "i would have an apple",
+            "jag skulle ha ett apple"
+        ],
+        [
+            "i am a man",
+            "jag \u00e4r en man"
+        ],
+        [
+            "i have been a man",
+            "jag har varit en man"
+        ],
+        [
+            "i was a man",
+            "jag var en man"
+        ],
+        [
+            "i will be a man",
+            "jag ska vara en man"
+        ],
+        [
+            "i am going to be a man",
+            "jag kommer att vara en man"
+        ],
+        [
+            "i would be a man",
+            "jag skulle vara en man"
+        ]
+    ]
+}
